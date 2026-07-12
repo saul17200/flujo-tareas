@@ -64,7 +64,7 @@ export const useTaskStore = create<TaskState>()(
         })),
     }),
     {
-      name: "flujo-tareas-storage",
+      name: "flujo-tareas-storage-v2",
     },
   ),
 )

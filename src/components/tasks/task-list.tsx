@@ -1,3 +1,5 @@
+import { useMemo } from "react"
+
 import { TaskCard } from "@/components/tasks/task-card"
 import { useTaskStore } from "@/store/task-store"
 import type { TaskStatus } from "@/types/task"
@@ -8,8 +10,11 @@ interface TaskSectionProps {
 }
 
 function TaskSection({ title, status }: TaskSectionProps) {
-  const tasks = useTaskStore((state) =>
-    state.tasks.filter((task) => task.status === status),
+  const allTasks = useTaskStore((state) => state.tasks)
+
+  const tasks = useMemo(
+    () => allTasks.filter((task) => task.status === status),
+    [allTasks, status],
   )
 
   return (
