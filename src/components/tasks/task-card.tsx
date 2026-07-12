@@ -1,11 +1,17 @@
+import { useState } from "react"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { motion } from "framer-motion"
 import {
   CalendarDays,
+  GripVertical,
+  Pencil,
   Trash2,
   TriangleAlert,
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { TaskEditDialog } from "@/components/tasks/task-edit-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -61,6 +67,8 @@ function isOverdue(task: Task) {
 }
 
 export function TaskCard({ task }: TaskCardProps) {
+  const [editOpen, setEditOpen] = useState(false)
+
   const toggleTask = useTaskStore(
     (state) => state.toggleTask,
   )
@@ -68,21 +76,36 @@ export function TaskCard({ task }: TaskCardProps) {
     (state) => state.deleteTask,
   )
 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: task.id,
+    data: {
+      type: "task",
+      status: task.status,
+    },
+  })
+
   const completed = task.status === "completed"
   const overdue = isOverdue(task)
 
   function handleToggle() {
     toggleTask(task.id)
 
-    if (completed) {
-      toast.info("Tarea marcada como pendiente", {
+    toast.success(
+      completed
+        ? "Tarea marcada como pendiente"
+        : "Tarea completada",
+      {
         description: task.title,
-      })
-    } else {
-      toast.success("Tarea completada", {
-        description: task.title,
-      })
-    }
+      },
+    )
   }
 
   function handleDelete() {
@@ -94,92 +117,140 @@ export function TaskCard({ task }: TaskCardProps) {
   }
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.96 }}
-      transition={{ duration: 0.2 }}
-    >
-      <Card
-        className={
-          completed
-            ? "opacity-60"
-            : overdue
-              ? "border-destructive/60"
-              : ""
-        }
+    <>
+      <div
+        ref={setNodeRef}
+        style={{
+          transform: CSS.Transform.toString(transform),
+          transition,
+          opacity: isDragging ? 0.45 : 1,
+          zIndex: isDragging ? 20 : undefined,
+        }}
       >
-        <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-          <Checkbox
-            checked={completed}
-            onCheckedChange={handleToggle}
-            aria-label={`Cambiar estado de ${task.title}`}
-          />
-
-          <div className="min-w-0 flex-1">
-            <CardTitle
-              className={
-                completed
-                  ? "break-words text-base line-through"
-                  : "break-words text-base"
-              }
-            >
-              {task.title}
-            </CardTitle>
-
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Badge
-                variant={priorityVariants[task.priority]}
-              >
-                Prioridad {priorityLabels[task.priority]}
-              </Badge>
-
-              {overdue && (
-                <Badge variant="destructive">
-                  <TriangleAlert className="size-3" />
-                  Vencida
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={handleDelete}
-            aria-label={`Eliminar ${task.title}`}
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Card
+            className={
+              completed
+                ? "opacity-60"
+                : overdue
+                  ? "border-destructive/60"
+                  : ""
+            }
           >
-            <Trash2 className="size-4" />
-          </Button>
-        </CardHeader>
-
-        {(task.description || task.dueDate) && (
-          <CardContent className="grid gap-3">
-            {task.description && (
-              <p className="break-words text-sm text-muted-foreground">
-                {task.description}
-              </p>
-            )}
-
-            {task.dueDate && (
-              <div
-                className={
-                  overdue
-                    ? "flex items-center gap-2 text-sm text-destructive"
-                    : "flex items-center gap-2 text-sm text-muted-foreground"
-                }
+            <CardHeader className="flex flex-row items-start gap-3 space-y-0">
+              <Button
+                ref={setActivatorNodeRef}
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="cursor-grab touch-none active:cursor-grabbing"
+                aria-label={`Arrastrar ${task.title}`}
+                {...attributes}
+                {...listeners}
               >
-                <CalendarDays className="size-4 shrink-0" />
-                <span>
-                  Fecha límite: {formatDate(task.dueDate)}
-                </span>
+                <GripVertical className="size-4" />
+              </Button>
+
+              <Checkbox
+                checked={completed}
+                onCheckedChange={handleToggle}
+                aria-label={`Cambiar estado de ${task.title}`}
+              />
+
+              <div className="min-w-0 flex-1">
+                <CardTitle
+                  className={
+                    completed
+                      ? "break-words text-base line-through"
+                      : "break-words text-base"
+                  }
+                >
+                  {task.title}
+                </CardTitle>
+
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Badge
+                    variant={
+                      priorityVariants[task.priority]
+                    }
+                  >
+                    Prioridad{" "}
+                    {priorityLabels[task.priority]}
+                  </Badge>
+
+                  {overdue && (
+                    <Badge variant="destructive">
+                      <TriangleAlert className="size-3" />
+                      Vencida
+                    </Badge>
+                  )}
+                </div>
               </div>
+
+              <div className="flex items-center">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setEditOpen(true)}
+                  aria-label={`Editar ${task.title}`}
+                >
+                  <Pencil className="size-4" />
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDelete}
+                  aria-label={`Eliminar ${task.title}`}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            </CardHeader>
+
+            {(task.description || task.dueDate) && (
+              <CardContent className="grid gap-3">
+                {task.description && (
+                  <p className="break-words text-sm text-muted-foreground">
+                    {task.description}
+                  </p>
+                )}
+
+                {task.dueDate && (
+                  <div
+                    className={
+                      overdue
+                        ? "flex items-center gap-2 text-sm text-destructive"
+                        : "flex items-center gap-2 text-sm text-muted-foreground"
+                    }
+                  >
+                    <CalendarDays className="size-4 shrink-0" />
+
+                    <span>
+                      Fecha límite:{" "}
+                      {formatDate(task.dueDate)}
+                    </span>
+                  </div>
+                )}
+              </CardContent>
             )}
-          </CardContent>
-        )}
-      </Card>
-    </motion.div>
+          </Card>
+        </motion.div>
+      </div>
+
+      <TaskEditDialog
+        task={task}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
+    </>
   )
 }

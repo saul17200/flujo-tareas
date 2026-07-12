@@ -10,7 +10,7 @@ import type {
 export type StatusFilter = "all" | TaskStatus
 export type PriorityFilter = "all" | TaskPriority
 
-interface CreateTaskInput {
+export interface TaskInput {
   title: string
   description: string
   priority: TaskPriority
@@ -23,9 +23,15 @@ interface TaskState {
   statusFilter: StatusFilter
   priorityFilter: PriorityFilter
 
-  addTask: (input: CreateTaskInput) => void
+  addTask: (input: TaskInput) => void
+  updateTask: (id: string, input: TaskInput) => void
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
+  moveTask: (
+    activeId: string,
+    overId: string | null,
+    targetStatus: TaskStatus,
+  ) => void
 
   setSearch: (search: string) => void
   setStatusFilter: (filter: StatusFilter) => void
@@ -75,6 +81,18 @@ export const useTaskStore = create<TaskState>()(
           ],
         })),
 
+      updateTask: (id, input) =>
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === id
+              ? {
+                  ...task,
+                  ...input,
+                }
+              : task,
+          ),
+        })),
+
       toggleTask: (id) =>
         set((state) => ({
           tasks: state.tasks.map((task) =>
@@ -94,6 +112,60 @@ export const useTaskStore = create<TaskState>()(
         set((state) => ({
           tasks: state.tasks.filter((task) => task.id !== id),
         })),
+
+      moveTask: (activeId, overId, targetStatus) =>
+        set((state) => {
+          const activeTask = state.tasks.find(
+            (task) => task.id === activeId,
+          )
+
+          if (!activeTask) {
+            return state
+          }
+
+          const remainingTasks = state.tasks.filter(
+            (task) => task.id !== activeId,
+          )
+
+          const movedTask: Task = {
+            ...activeTask,
+            status: targetStatus,
+          }
+
+          if (
+            overId &&
+            overId !== "pending" &&
+            overId !== "completed"
+          ) {
+            const overIndex = remainingTasks.findIndex(
+              (task) => task.id === overId,
+            )
+
+            if (overIndex >= 0) {
+              remainingTasks.splice(overIndex, 0, movedTask)
+
+              return {
+                tasks: remainingTasks,
+              }
+            }
+          }
+
+          const lastTargetIndex = remainingTasks.reduce(
+            (lastIndex, task, index) =>
+              task.status === targetStatus ? index : lastIndex,
+            -1,
+          )
+
+          remainingTasks.splice(
+            lastTargetIndex + 1,
+            0,
+            movedTask,
+          )
+
+          return {
+            tasks: remainingTasks,
+          }
+        }),
 
       setSearch: (search) => set({ search }),
 
