@@ -1,3 +1,4 @@
+import { motion } from "framer-motion"
 import { Trash2 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -38,51 +39,55 @@ export function TaskCard({ task }: TaskCardProps) {
   const completed = task.status === "completed"
 
   return (
-    <Card className={completed ? "opacity-60" : ""}>
-      <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-        <Checkbox
-          checked={completed}
-          onCheckedChange={() => toggleTask(task.id)}
-          aria-label={`Marcar ${task.title} como completada`}
-        />
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card className={completed ? "opacity-60" : ""}>
+        <CardHeader className="flex flex-row items-start gap-3 space-y-0">
+          <Checkbox
+            checked={completed}
+            onCheckedChange={() => toggleTask(task.id)}
+            aria-label={`Marcar ${task.title} como completada`}
+          />
 
-        <div className="min-w-0 flex-1">
-          <CardTitle
-            className={
-              completed
-                ? "text-base line-through"
-                : "text-base"
-            }
+          <div className="min-w-0 flex-1">
+            <CardTitle
+              className={completed ? "text-base line-through" : "text-base"}
+            >
+              {task.title}
+            </CardTitle>
+
+            <Badge
+              variant={priorityVariants[task.priority]}
+              className="mt-2"
+            >
+              Prioridad {priorityLabels[task.priority]}
+            </Badge>
+          </div>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => deleteTask(task.id)}
+            aria-label={`Eliminar ${task.title}`}
           >
-            {task.title}
-          </CardTitle>
+            <Trash2 className="size-4" />
+          </Button>
+        </CardHeader>
 
-          <Badge
-            variant={priorityVariants[task.priority]}
-            className="mt-2"
-          >
-            Prioridad {priorityLabels[task.priority]}
-          </Badge>
-        </div>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => deleteTask(task.id)}
-          aria-label={`Eliminar ${task.title}`}
-        >
-          <Trash2 className="size-4" />
-        </Button>
-      </CardHeader>
-
-      {task.description && (
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {task.description}
-          </p>
-        </CardContent>
-      )}
-    </Card>
+        {task.description && (
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              {task.description}
+            </p>
+          </CardContent>
+        )}
+      </Card>
+    </motion.div>
   )
 }

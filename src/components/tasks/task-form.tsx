@@ -7,7 +7,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select"
 import { useTaskStore } from "@/store/task-store"
 import type { TaskPriority } from "@/types/task"
@@ -63,7 +62,13 @@ export function TaskForm() {
         onValueChange={(value) => setPriority(value as TaskPriority)}
       >
         <SelectTrigger>
-          <SelectValue placeholder="Prioridad" />
+          <span>
+            {priority === "low"
+              ? "Baja"
+              : priority === "medium"
+                ? "Media"
+                : "Alta"}
+          </span>
         </SelectTrigger>
 
         <SelectContent>
