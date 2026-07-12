@@ -8,4 +8,5 @@ export interface Task {
   priority: TaskPriority
   status: TaskStatus
   createdAt: string
+  dueDate: string | null
 }

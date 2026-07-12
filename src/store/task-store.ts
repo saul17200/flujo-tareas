@@ -14,6 +14,7 @@ interface CreateTaskInput {
   title: string
   description: string
   priority: TaskPriority
+  dueDate: string | null
 }
 
 interface TaskState {
@@ -33,8 +34,10 @@ interface TaskState {
 }
 
 function createId() {
-  return globalThis.crypto?.randomUUID?.()
-    ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  return (
+    globalThis.crypto?.randomUUID?.() ??
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  )
 }
 
 export const useTaskStore = create<TaskState>()(
@@ -48,6 +51,7 @@ export const useTaskStore = create<TaskState>()(
           priority: "high",
           status: "pending",
           createdAt: new Date().toISOString(),
+          dueDate: null,
         },
       ],
 
@@ -65,6 +69,7 @@ export const useTaskStore = create<TaskState>()(
               priority: input.priority,
               status: "pending",
               createdAt: new Date().toISOString(),
+              dueDate: input.dueDate,
             },
             ...state.tasks,
           ],
@@ -111,6 +116,21 @@ export const useTaskStore = create<TaskState>()(
       partialize: (state) => ({
         tasks: state.tasks,
       }),
+
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<TaskState>
+
+        return {
+          ...currentState,
+          ...persisted,
+          tasks: (persisted.tasks ?? currentState.tasks).map(
+            (task) => ({
+              ...task,
+              dueDate: task.dueDate ?? null,
+            }),
+          ),
+        }
+      },
     },
   ),
 )
