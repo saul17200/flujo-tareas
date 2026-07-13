@@ -6,6 +6,7 @@ import "./index.css"
 
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
+import { AuthProvider } from "@/features/auth/auth-provider"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -13,12 +14,15 @@ createRoot(document.getElementById("root")!).render(
       defaultTheme="system"
       storageKey="flujo-tareas-theme"
     >
-      <App />
-      <Toaster
-        position="bottom-right"
-        richColors
-        closeButton
-      />
+      <AuthProvider>
+        <App />
+
+        <Toaster
+          position="bottom-right"
+          richColors
+          closeButton
+        />
+      </AuthProvider>
     </ThemeProvider>
   </StrictMode>,
 )
