@@ -9,6 +9,7 @@ import { toast } from "sonner"
 
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview"
 import { TaskCharts } from "@/components/dashboard/task-charts"
+import { TaskCalendar } from "@/components/dashboard/task-calendar"
 import { TaskFilters } from "@/components/dashboard/task-filters"
 import { UpcomingDeadlines } from "@/components/dashboard/upcoming-deadlines"
 import { ModeToggle } from "@/components/mode-toggle"
@@ -102,6 +103,21 @@ export function DashboardPage() {
         <TaskCharts />
 
         <UpcomingDeadlines />
+
+
+        <section className="grid gap-4">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">
+              Calendario
+            </h2>
+
+            <p className="mt-1 text-sm text-muted-foreground">
+              Consulta tus actividades por fecha.
+            </p>
+          </div>
+
+          <TaskCalendar />
+        </section>
 
         <section className="grid gap-4">
           <div>
