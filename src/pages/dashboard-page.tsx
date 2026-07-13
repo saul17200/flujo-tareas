@@ -3,6 +3,7 @@ import {
   CheckCircle2,
   LogOut,
   Sparkles,
+  UserRound,
 } from "lucide-react"
 import { useNavigate } from "react-router"
 import { toast } from "sonner"
@@ -62,6 +63,17 @@ export function DashboardPage() {
             <span className="hidden max-w-56 truncate text-sm text-muted-foreground md:block">
               {user?.email}
             </span>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => navigate("/perfil")}
+              aria-label="Abrir perfil"
+              title="Mi perfil"
+            >
+              <UserRound className="size-4" />
+            </Button>
 
             <ModeToggle />
 

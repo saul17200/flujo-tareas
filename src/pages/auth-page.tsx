@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/features/auth/auth-provider"
 import { login, register } from "@/services/auth"
+import { sendUserPasswordReset } from "@/services/profile"
 
 type AuthMode = "login" | "register"
 
@@ -100,6 +101,35 @@ export function AuthPage() {
       toast.error(getErrorMessage(error))
     } finally {
       setSubmitting(false)
+    }
+  }
+
+
+  async function handleForgotPassword() {
+    const cleanEmail = email.trim().toLowerCase()
+
+    if (!cleanEmail) {
+      toast.error(
+        "Escribe tu correo electrónico primero.",
+      )
+      return
+    }
+
+    try {
+      await sendUserPasswordReset(cleanEmail)
+
+      toast.success(
+        "Correo de recuperación enviado.",
+        {
+          description: cleanEmail,
+        },
+      )
+    } catch (error) {
+      console.error(error)
+
+      toast.error(
+        "No fue posible enviar el correo de recuperación.",
+      )
     }
   }
 
@@ -237,6 +267,18 @@ export function AuthPage() {
                       required
                     />
                   </div>
+                )}
+
+
+                {mode === "login" && (
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={handleForgotPassword}
+                    className="h-auto justify-start p-0"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Button>
                 )}
 
                 <Button

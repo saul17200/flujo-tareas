@@ -7,6 +7,7 @@ import {
 import { ProtectedRoute } from "@/features/auth/protected-route"
 import { AuthPage } from "@/pages/auth-page"
 import { DashboardPage } from "@/pages/dashboard-page"
+import { ProfilePage } from "@/pages/profile-page"
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/perfil" element={<ProfilePage />} />
         </Route>
 
         <Route path="*" element={<AuthPage />} />
