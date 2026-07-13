@@ -86,7 +86,7 @@ export function TaskEditDialog({
       return
     }
 
-    updateTask(task.id, {
+    void updateTask(task.id, {
       title: cleanTitle,
       description: description.trim(),
       priority,

@@ -96,7 +96,7 @@ export function TaskCard({ task }: TaskCardProps) {
   const overdue = isOverdue(task)
 
   function handleToggle() {
-    toggleTask(task.id)
+    void toggleTask(task.id)
 
     toast.success(
       completed
@@ -109,7 +109,7 @@ export function TaskCard({ task }: TaskCardProps) {
   }
 
   function handleDelete() {
-    deleteTask(task.id)
+    void deleteTask(task.id)
 
     toast.success("Tarea eliminada", {
       description: task.title,

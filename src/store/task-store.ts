@@ -1,6 +1,10 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
 
+import {
+  removeTask,
+  saveTask,
+  saveTaskOrder,
+} from "@/services/tasks"
 import type {
   Task,
   TaskPriority,
@@ -19,24 +23,31 @@ export interface TaskInput {
 
 interface TaskState {
   tasks: Task[]
+  userId: string | null
+  loadingTasks: boolean
   search: string
   statusFilter: StatusFilter
   priorityFilter: PriorityFilter
 
-  addTask: (input: TaskInput) => void
-  updateTask: (id: string, input: TaskInput) => void
-  toggleTask: (id: string) => void
-  deleteTask: (id: string) => void
+  setUserId: (userId: string | null) => void
+  setTasks: (tasks: Task[]) => void
+  setLoadingTasks: (loading: boolean) => void
+
+  addTask: (input: TaskInput) => Promise<void>
+  updateTask: (id: string, input: TaskInput) => Promise<void>
+  toggleTask: (id: string) => Promise<void>
+  deleteTask: (id: string) => Promise<void>
   moveTask: (
     activeId: string,
     overId: string | null,
     targetStatus: TaskStatus,
-  ) => void
+  ) => Promise<void>
 
   setSearch: (search: string) => void
   setStatusFilter: (filter: StatusFilter) => void
   setPriorityFilter: (filter: PriorityFilter) => void
   clearFilters: () => void
+  resetTasks: () => void
 }
 
 function createId() {
@@ -46,152 +57,200 @@ function createId() {
   )
 }
 
-export const useTaskStore = create<TaskState>()(
-  persist(
-    (set) => ({
-      tasks: [
-        {
-          id: createId(),
-          title: "Terminar la primera versión",
-          description: "Construir el tablero inicial de FlujoTareas.",
-          priority: "high",
-          status: "pending",
-          createdAt: new Date().toISOString(),
-          dueDate: null,
-        },
-      ],
+export const useTaskStore = create<TaskState>((set, get) => ({
+  tasks: [],
+  userId: null,
+  loadingTasks: true,
+  search: "",
+  statusFilter: "all",
+  priorityFilter: "all",
 
+  setUserId: (userId) => set({ userId }),
+
+  setTasks: (tasks) =>
+    set({
+      tasks,
+      loadingTasks: false,
+    }),
+
+  setLoadingTasks: (loadingTasks) =>
+    set({ loadingTasks }),
+
+  addTask: async (input) => {
+    const { userId, tasks } = get()
+
+    if (!userId) {
+      throw new Error("No hay una sesión activa.")
+    }
+
+    const task: Task = {
+      id: createId(),
+      ...input,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+      order: tasks.length,
+    }
+
+    set({
+      tasks: [task, ...tasks],
+    })
+
+    await saveTask(userId, task)
+  },
+
+  updateTask: async (id, input) => {
+    const { userId, tasks } = get()
+
+    if (!userId) {
+      throw new Error("No hay una sesión activa.")
+    }
+
+    const updatedTasks = tasks.map((task) =>
+      task.id === id
+        ? {
+            ...task,
+            ...input,
+          }
+        : task,
+    )
+
+    const updatedTask = updatedTasks.find(
+      (task) => task.id === id,
+    )
+
+    if (!updatedTask) {
+      return
+    }
+
+    set({ tasks: updatedTasks })
+    await saveTask(userId, updatedTask)
+  },
+
+  toggleTask: async (id) => {
+    const { userId, tasks } = get()
+
+    if (!userId) {
+      throw new Error("No hay una sesión activa.")
+    }
+
+    const updatedTasks: Task[] = tasks.map((task) => {
+      if (task.id !== id) {
+        return task
+      }
+
+      const nextStatus: TaskStatus =
+        task.status === "pending"
+          ? "completed"
+          : "pending"
+
+      return {
+        ...task,
+        status: nextStatus,
+      }
+    })
+
+    const updatedTask = updatedTasks.find(
+      (task) => task.id === id,
+    )
+
+    if (!updatedTask) {
+      return
+    }
+
+    set({ tasks: updatedTasks })
+    await saveTask(userId, updatedTask)
+  },
+
+  deleteTask: async (id) => {
+    const { userId, tasks } = get()
+
+    if (!userId) {
+      throw new Error("No hay una sesión activa.")
+    }
+
+    set({
+      tasks: tasks.filter((task) => task.id !== id),
+    })
+
+    await removeTask(userId, id)
+  },
+
+  moveTask: async (
+    activeId,
+    overId,
+    targetStatus,
+  ) => {
+    const { userId, tasks } = get()
+
+    if (!userId) {
+      throw new Error("No hay una sesión activa.")
+    }
+
+    const activeIndex = tasks.findIndex(
+      (task) => task.id === activeId,
+    )
+
+    if (activeIndex < 0) {
+      return
+    }
+
+    const nextTasks = [...tasks]
+    const [activeTask] = nextTasks.splice(activeIndex, 1)
+
+    const movedTask: Task = {
+      ...activeTask,
+      status: targetStatus,
+    }
+
+    if (
+      overId &&
+      overId !== "pending" &&
+      overId !== "completed"
+    ) {
+      const overIndex = nextTasks.findIndex(
+        (task) => task.id === overId,
+      )
+
+      if (overIndex >= 0) {
+        nextTasks.splice(overIndex, 0, movedTask)
+      } else {
+        nextTasks.push(movedTask)
+      }
+    } else {
+      nextTasks.push(movedTask)
+    }
+
+    const orderedTasks = nextTasks.map((task, index) => ({
+      ...task,
+      order: index,
+    }))
+
+    set({ tasks: orderedTasks })
+    await saveTaskOrder(userId, orderedTasks)
+  },
+
+  setSearch: (search) => set({ search }),
+
+  setStatusFilter: (statusFilter) =>
+    set({ statusFilter }),
+
+  setPriorityFilter: (priorityFilter) =>
+    set({ priorityFilter }),
+
+  clearFilters: () =>
+    set({
       search: "",
       statusFilter: "all",
       priorityFilter: "all",
-
-      addTask: (input) =>
-        set((state) => ({
-          tasks: [
-            {
-              id: createId(),
-              ...input,
-              status: "pending",
-              createdAt: new Date().toISOString(),
-            },
-            ...state.tasks,
-          ],
-        })),
-
-      updateTask: (id, input) =>
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === id
-              ? {
-                  ...task,
-                  ...input,
-                }
-              : task,
-          ),
-        })),
-
-      toggleTask: (id) =>
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === id
-              ? {
-                  ...task,
-                  status:
-                    task.status === "pending"
-                      ? "completed"
-                      : "pending",
-                }
-              : task,
-          ),
-        })),
-
-      deleteTask: (id) =>
-        set((state) => ({
-          tasks: state.tasks.filter((task) => task.id !== id),
-        })),
-
-      moveTask: (activeId, overId, targetStatus) =>
-        set((state) => {
-          const activeIndex = state.tasks.findIndex(
-            (task) => task.id === activeId,
-          )
-
-          if (activeIndex < 0) {
-            return state
-          }
-
-          const nextTasks = [...state.tasks]
-          const [activeTask] = nextTasks.splice(activeIndex, 1)
-
-          const movedTask: Task = {
-            ...activeTask,
-            status: targetStatus,
-          }
-
-          if (
-            overId &&
-            overId !== "pending" &&
-            overId !== "completed"
-          ) {
-            const overIndex = nextTasks.findIndex(
-              (task) => task.id === overId,
-            )
-
-            if (overIndex >= 0) {
-              nextTasks.splice(overIndex, 0, movedTask)
-
-              return {
-                tasks: nextTasks,
-              }
-            }
-          }
-
-          const lastTargetIndex = nextTasks.reduce(
-            (lastIndex, task, index) =>
-              task.status === targetStatus ? index : lastIndex,
-            -1,
-          )
-
-          nextTasks.splice(lastTargetIndex + 1, 0, movedTask)
-
-          return {
-            tasks: nextTasks,
-          }
-        }),
-
-      setSearch: (search) => set({ search }),
-      setStatusFilter: (statusFilter) => set({ statusFilter }),
-      setPriorityFilter: (priorityFilter) =>
-        set({ priorityFilter }),
-
-      clearFilters: () =>
-        set({
-          search: "",
-          statusFilter: "all",
-          priorityFilter: "all",
-        }),
     }),
-    {
-      name: "flujo-tareas-storage-v3",
 
-      partialize: (state) => ({
-        tasks: state.tasks,
-      }),
-
-      merge: (persistedState, currentState) => {
-        const persisted = persistedState as Partial<TaskState>
-
-        return {
-          ...currentState,
-          ...persisted,
-          tasks: (persisted.tasks ?? currentState.tasks).map(
-            (task) => ({
-              ...task,
-              dueDate: task.dueDate ?? null,
-            }),
-          ),
-        }
-      },
-    },
-  ),
-)
+  resetTasks: () =>
+    set({
+      tasks: [],
+      userId: null,
+      loadingTasks: true,
+      search: "",
+      statusFilter: "all",
+      priorityFilter: "all",
+    }),
+}))

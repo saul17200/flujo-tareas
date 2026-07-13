@@ -216,7 +216,7 @@ export function TaskList() {
       return
     }
 
-    moveTask(activeId, overId, targetStatus)
+    void moveTask(activeId, overId, targetStatus)
 
     if (activeTask.status !== targetStatus) {
       toast.success(

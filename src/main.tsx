@@ -7,6 +7,7 @@ import "./index.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/features/auth/auth-provider"
+import { TaskSync } from "@/features/auth/task-sync"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -15,6 +16,7 @@ createRoot(document.getElementById("root")!).render(
       storageKey="flujo-tareas-theme"
     >
       <AuthProvider>
+        <TaskSync />
         <App />
 
         <Toaster

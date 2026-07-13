@@ -41,7 +41,7 @@ export function TaskForm() {
       return
     }
 
-    addTask({
+    void addTask({
       title: cleanTitle,
       description: description.trim(),
       priority,

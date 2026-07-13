@@ -9,4 +9,5 @@ export interface Task {
   status: TaskStatus
   createdAt: string
   dueDate: string | null
+  order?: number
 }
