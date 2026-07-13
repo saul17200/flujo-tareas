@@ -33,11 +33,9 @@ interface TaskEditDialogProps {
 }
 
 function parseDateKey(dateKey: string | null) {
-  if (!dateKey) {
-    return undefined
-  }
-
-  return new Date(`${dateKey}T12:00:00`)
+  return dateKey
+    ? new Date(`${dateKey}T12:00:00`)
+    : undefined
 }
 
 function toDateKey(date: Date) {
@@ -110,17 +108,14 @@ export function TaskEditDialog({
         : "Alta"
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Editar tarea</DialogTitle>
 
             <DialogDescription>
-              Modifica la información y guarda los cambios.
+              Modifica la información de la tarea.
             </DialogDescription>
           </DialogHeader>
 
@@ -139,7 +134,6 @@ export function TaskEditDialog({
                 onChange={(event) =>
                   setTitle(event.target.value)
                 }
-                placeholder="Nombre de la tarea"
               />
             </div>
 
@@ -157,7 +151,6 @@ export function TaskEditDialog({
                 onChange={(event) =>
                   setDescription(event.target.value)
                 }
-                placeholder="Descripción opcional"
                 rows={4}
               />
             </div>
@@ -178,17 +171,9 @@ export function TaskEditDialog({
                 </SelectTrigger>
 
                 <SelectContent>
-                  <SelectItem value="low">
-                    Baja
-                  </SelectItem>
-
-                  <SelectItem value="medium">
-                    Media
-                  </SelectItem>
-
-                  <SelectItem value="high">
-                    Alta
-                  </SelectItem>
+                  <SelectItem value="low">Baja</SelectItem>
+                  <SelectItem value="medium">Media</SelectItem>
+                  <SelectItem value="high">Alta</SelectItem>
                 </SelectContent>
               </Select>
             </div>

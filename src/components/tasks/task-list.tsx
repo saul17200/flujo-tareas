@@ -4,6 +4,7 @@ import {
   DndContext,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useDroppable,
   useSensor,
   useSensors,
@@ -92,26 +93,26 @@ function TaskSection({
 }
 
 export function TaskList() {
-  const allTasks = useTaskStore(
-    (state) => state.tasks,
-  )
-  const search = useTaskStore(
-    (state) => state.search,
-  )
+  const allTasks = useTaskStore((state) => state.tasks)
+  const search = useTaskStore((state) => state.search)
   const statusFilter = useTaskStore(
     (state) => state.statusFilter,
   )
   const priorityFilter = useTaskStore(
     (state) => state.priorityFilter,
   )
-  const moveTask = useTaskStore(
-    (state) => state.moveTask,
-  )
+  const moveTask = useTaskStore((state) => state.moveTask)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 6,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 180,
+        tolerance: 8,
       },
     }),
     useSensor(KeyboardSensor, {

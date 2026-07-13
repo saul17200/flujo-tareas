@@ -70,12 +70,9 @@ export const useTaskStore = create<TaskState>()(
           tasks: [
             {
               id: createId(),
-              title: input.title,
-              description: input.description,
-              priority: input.priority,
+              ...input,
               status: "pending",
               createdAt: new Date().toISOString(),
-              dueDate: input.dueDate,
             },
             ...state.tasks,
           ],
@@ -115,17 +112,16 @@ export const useTaskStore = create<TaskState>()(
 
       moveTask: (activeId, overId, targetStatus) =>
         set((state) => {
-          const activeTask = state.tasks.find(
+          const activeIndex = state.tasks.findIndex(
             (task) => task.id === activeId,
           )
 
-          if (!activeTask) {
+          if (activeIndex < 0) {
             return state
           }
 
-          const remainingTasks = state.tasks.filter(
-            (task) => task.id !== activeId,
-          )
+          const nextTasks = [...state.tasks]
+          const [activeTask] = nextTasks.splice(activeIndex, 1)
 
           const movedTask: Task = {
             ...activeTask,
@@ -137,41 +133,34 @@ export const useTaskStore = create<TaskState>()(
             overId !== "pending" &&
             overId !== "completed"
           ) {
-            const overIndex = remainingTasks.findIndex(
+            const overIndex = nextTasks.findIndex(
               (task) => task.id === overId,
             )
 
             if (overIndex >= 0) {
-              remainingTasks.splice(overIndex, 0, movedTask)
+              nextTasks.splice(overIndex, 0, movedTask)
 
               return {
-                tasks: remainingTasks,
+                tasks: nextTasks,
               }
             }
           }
 
-          const lastTargetIndex = remainingTasks.reduce(
+          const lastTargetIndex = nextTasks.reduce(
             (lastIndex, task, index) =>
               task.status === targetStatus ? index : lastIndex,
             -1,
           )
 
-          remainingTasks.splice(
-            lastTargetIndex + 1,
-            0,
-            movedTask,
-          )
+          nextTasks.splice(lastTargetIndex + 1, 0, movedTask)
 
           return {
-            tasks: remainingTasks,
+            tasks: nextTasks,
           }
         }),
 
       setSearch: (search) => set({ search }),
-
-      setStatusFilter: (statusFilter) =>
-        set({ statusFilter }),
-
+      setStatusFilter: (statusFilter) => set({ statusFilter }),
       setPriorityFilter: (priorityFilter) =>
         set({ priorityFilter }),
 

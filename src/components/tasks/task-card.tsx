@@ -143,7 +143,7 @@ export function TaskCard({ task }: TaskCardProps) {
                   : ""
             }
           >
-            <CardHeader className="flex flex-row items-start gap-3 space-y-0">
+            <CardHeader className="flex flex-row items-start gap-2 space-y-0">
               <Button
                 ref={setActivatorNodeRef}
                 type="button"
@@ -193,27 +193,25 @@ export function TaskCard({ task }: TaskCardProps) {
                 </div>
               </div>
 
-              <div className="flex items-center">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setEditOpen(true)}
-                  aria-label={`Editar ${task.title}`}
-                >
-                  <Pencil className="size-4" />
-                </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setEditOpen(true)}
+                aria-label={`Editar ${task.title}`}
+              >
+                <Pencil className="size-4" />
+              </Button>
 
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleDelete}
-                  aria-label={`Eliminar ${task.title}`}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handleDelete}
+                aria-label={`Eliminar ${task.title}`}
+              >
+                <Trash2 className="size-4" />
+              </Button>
             </CardHeader>
 
             {(task.description || task.dueDate) && (
@@ -235,8 +233,7 @@ export function TaskCard({ task }: TaskCardProps) {
                     <CalendarDays className="size-4 shrink-0" />
 
                     <span>
-                      Fecha límite:{" "}
-                      {formatDate(task.dueDate)}
+                      Fecha límite: {formatDate(task.dueDate)}
                     </span>
                   </div>
                 )}
