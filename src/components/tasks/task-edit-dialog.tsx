@@ -6,6 +6,7 @@ import {
 import { toast } from "sonner"
 
 import { DueDatePicker } from "@/components/tasks/due-date-picker"
+import { TaskComments } from "@/components/tasks/task-comments"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -188,6 +189,11 @@ export function TaskEditDialog({
                 onChange={setDueDate}
               />
             </div>
+          </div>
+
+
+          <div className="pb-5">
+            <TaskComments task={task} />
           </div>
 
           <DialogFooter>
