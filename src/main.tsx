@@ -1,3 +1,4 @@
+import { registerSW } from "virtual:pwa-register"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 
@@ -8,6 +9,13 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/features/auth/auth-provider"
 import { TaskSync } from "@/features/auth/task-sync"
+
+registerSW({
+  immediate: true,
+  onOfflineReady() {
+    console.info("FlujoTareas está disponible sin conexión.")
+  },
+})
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
