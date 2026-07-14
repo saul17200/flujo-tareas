@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react"
 import { toast } from "sonner"
 
+import { SubjectSelect } from "@/components/academic/subject-select"
 import { DueDatePicker } from "@/components/tasks/due-date-picker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,36 +27,51 @@ export function TaskForm() {
 
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const [subjectId, setSubjectId] =
+    useState<string | null>(null)
+  const [subjectName, setSubjectName] =
+    useState<string | null>(null)
   const [priority, setPriority] =
     useState<TaskPriority>("medium")
   const [dueDate, setDueDate] =
     useState<Date | undefined>()
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault()
 
     const cleanTitle = title.trim()
 
     if (!cleanTitle) {
-      toast.error("Escribe el nombre de la tarea")
+      toast.error("Escribe el nombre de la tarea.")
       return
     }
 
-    void addTask({
-      title: cleanTitle,
-      description: description.trim(),
-      priority,
-      dueDate: dueDate ? toDateKey(dueDate) : null,
-    })
+    try {
+      await addTask({
+        title: cleanTitle,
+        description: description.trim(),
+        subjectId,
+        subjectName,
+        priority,
+        dueDate: dueDate ? toDateKey(dueDate) : null,
+      })
 
-    toast.success("Tarea creada correctamente", {
-      description: cleanTitle,
-    })
+      toast.success("Tarea creada correctamente", {
+        description: cleanTitle,
+      })
 
-    setTitle("")
-    setDescription("")
-    setPriority("medium")
-    setDueDate(undefined)
+      setTitle("")
+      setDescription("")
+      setSubjectId(null)
+      setSubjectName(null)
+      setPriority("medium")
+      setDueDate(undefined)
+    } catch (error) {
+      console.error(error)
+      toast.error("No fue posible crear la tarea.")
+    }
   }
 
   const priorityLabel =
@@ -68,7 +84,7 @@ export function TaskForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="grid gap-3 rounded-xl border bg-card p-4 shadow-sm md:grid-cols-2 xl:grid-cols-[1fr_1fr_150px_210px_auto]"
+      className="grid gap-3 rounded-xl border bg-card p-4 shadow-sm md:grid-cols-2 xl:grid-cols-[1fr_1fr_180px_150px_210px_auto]"
     >
       <Input
         value={title}
@@ -84,6 +100,14 @@ export function TaskForm() {
         }
         placeholder="Descripción opcional"
         aria-label="Descripción de la tarea"
+      />
+
+      <SubjectSelect
+        value={subjectId}
+        onChange={(nextId, nextName) => {
+          setSubjectId(nextId)
+          setSubjectName(nextName)
+        }}
       />
 
       <Select
@@ -108,7 +132,10 @@ export function TaskForm() {
         onChange={setDueDate}
       />
 
-      <Button type="submit" className="md:col-span-2 xl:col-span-1">
+      <Button
+        type="submit"
+        className="md:col-span-2 xl:col-span-1"
+      >
         Agregar tarea
       </Button>
     </form>

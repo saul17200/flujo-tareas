@@ -26,10 +26,38 @@ export function observeTasks(
   return onSnapshot(
     tasksCollection(userId),
     (snapshot) => {
-      const tasks = snapshot.docs.map((taskDoc) => ({
-        id: taskDoc.id,
-        ...taskDoc.data(),
-      })) as Task[]
+      const tasks: Task[] = snapshot.docs.map(
+        (taskDocumentSnapshot) => {
+          const data = taskDocumentSnapshot.data()
+
+          return {
+            id: taskDocumentSnapshot.id,
+            title: String(data.title ?? ""),
+            description: String(data.description ?? ""),
+            subjectId:
+              typeof data.subjectId === "string"
+                ? data.subjectId
+                : null,
+            subjectName:
+              typeof data.subjectName === "string"
+                ? data.subjectName
+                : null,
+            priority: data.priority ?? "medium",
+            status: data.status ?? "pending",
+            createdAt: String(
+              data.createdAt ?? new Date().toISOString(),
+            ),
+            dueDate:
+              typeof data.dueDate === "string"
+                ? data.dueDate
+                : null,
+            order:
+              typeof data.order === "number"
+                ? data.order
+                : undefined,
+          } as Task
+        },
+      )
 
       tasks.sort((a, b) => {
         const orderA = a.order ?? 0

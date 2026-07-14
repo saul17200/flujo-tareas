@@ -101,6 +101,9 @@ export function TaskList() {
   const priorityFilter = useTaskStore(
     (state) => state.priorityFilter,
   )
+  const subjectFilter = useTaskStore(
+    (state) => state.subjectFilter,
+  )
   const moveTask = useTaskStore((state) => state.moveTask)
 
   const sensors = useSensors(
@@ -143,10 +146,17 @@ export function TaskList() {
         priorityFilter === "all" ||
         task.priority === priorityFilter
 
+      const matchesSubject =
+        subjectFilter === "all" ||
+        (subjectFilter === "none"
+          ? !task.subjectId
+          : task.subjectId === subjectFilter)
+
       return (
         matchesSearch &&
         matchesStatus &&
-        matchesPriority
+        matchesPriority &&
+        matchesSubject
       )
     })
   }, [
@@ -154,6 +164,7 @@ export function TaskList() {
     search,
     statusFilter,
     priorityFilter,
+    subjectFilter,
   ])
 
   const pendingTasks = useMemo(

@@ -17,6 +17,8 @@ export type PriorityFilter = "all" | TaskPriority
 export interface TaskInput {
   title: string
   description: string
+  subjectId: string | null
+  subjectName: string | null
   priority: TaskPriority
   dueDate: string | null
 }
@@ -28,6 +30,7 @@ interface TaskState {
   search: string
   statusFilter: StatusFilter
   priorityFilter: PriorityFilter
+  subjectFilter: string
 
   setUserId: (userId: string | null) => void
   setTasks: (tasks: Task[]) => void
@@ -46,6 +49,7 @@ interface TaskState {
   setSearch: (search: string) => void
   setStatusFilter: (filter: StatusFilter) => void
   setPriorityFilter: (filter: PriorityFilter) => void
+  setSubjectFilter: (filter: string) => void
   clearFilters: () => void
   resetTasks: () => void
 }
@@ -64,6 +68,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   search: "",
   statusFilter: "all",
   priorityFilter: "all",
+  subjectFilter: "all",
 
   setUserId: (userId) => set({ userId }),
 
@@ -237,11 +242,15 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   setPriorityFilter: (priorityFilter) =>
     set({ priorityFilter }),
 
+  setSubjectFilter: (subjectFilter) =>
+    set({ subjectFilter }),
+
   clearFilters: () =>
     set({
       search: "",
       statusFilter: "all",
       priorityFilter: "all",
+      subjectFilter: "all",
     }),
 
   resetTasks: () =>
@@ -252,5 +261,6 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       search: "",
       statusFilter: "all",
       priorityFilter: "all",
+      subjectFilter: "all",
     }),
 }))

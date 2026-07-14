@@ -5,6 +5,8 @@ export interface Task {
   id: string
   title: string
   description: string
+  subjectId: string | null
+  subjectName: string | null
   priority: TaskPriority
   status: TaskStatus
   createdAt: string

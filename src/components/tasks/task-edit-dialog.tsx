@@ -5,6 +5,7 @@ import {
 } from "react"
 import { toast } from "sonner"
 
+import { SubjectSelect } from "@/components/academic/subject-select"
 import { DueDatePicker } from "@/components/tasks/due-date-picker"
 import { TaskComments } from "@/components/tasks/task-comments"
 import { Button } from "@/components/ui/button"
@@ -60,6 +61,10 @@ export function TaskEditDialog({
   const [description, setDescription] = useState(
     task.description,
   )
+  const [subjectId, setSubjectId] =
+    useState<string | null>(task.subjectId)
+  const [subjectName, setSubjectName] =
+    useState<string | null>(task.subjectName)
   const [priority, setPriority] =
     useState<TaskPriority>(task.priority)
   const [dueDate, setDueDate] = useState<Date | undefined>(
@@ -73,6 +78,8 @@ export function TaskEditDialog({
 
     setTitle(task.title)
     setDescription(task.description)
+    setSubjectId(task.subjectId)
+    setSubjectName(task.subjectName)
     setPriority(task.priority)
     setDueDate(parseDateKey(task.dueDate))
   }, [open, task])
@@ -90,6 +97,8 @@ export function TaskEditDialog({
     void updateTask(task.id, {
       title: cleanTitle,
       description: description.trim(),
+      subjectId,
+      subjectName,
       priority,
       dueDate: dueDate ? toDateKey(dueDate) : null,
     })
@@ -153,6 +162,21 @@ export function TaskEditDialog({
                   setDescription(event.target.value)
                 }
                 rows={4}
+              />
+            </div>
+
+
+            <div className="grid gap-2">
+              <span className="text-sm font-medium">
+                Materia
+              </span>
+
+              <SubjectSelect
+                value={subjectId}
+                onChange={(nextId, nextName) => {
+                  setSubjectId(nextId)
+                  setSubjectName(nextName)
+                }}
               />
             </div>
 

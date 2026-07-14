@@ -1,0 +1,769 @@
+=== src/types/task.ts ===
+export type TaskStatus = "pending" | "completed"
+export type TaskPriority = "low" | "medium" | "high"
+
+export interface Task {
+  id: string
+  title: string
+  description: string
+  priority: TaskPriority
+  status: TaskStatus
+  createdAt: string
+  dueDate: string | null
+  order?: number
+}
+
+=== src/components/tasks/task-form.tsx ===
+import { useState, type FormEvent } from "react"
+import { toast } from "sonner"
+
+import { DueDatePicker } from "@/components/tasks/due-date-picker"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select"
+import { useTaskStore } from "@/store/task-store"
+import type { TaskPriority } from "@/types/task"
+
+function toDateKey(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+
+  return `${year}-${month}-${day}`
+}
+
+export function TaskForm() {
+  const addTask = useTaskStore((state) => state.addTask)
+
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [priority, setPriority] =
+    useState<TaskPriority>("medium")
+  const [dueDate, setDueDate] =
+    useState<Date | undefined>()
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    const cleanTitle = title.trim()
+
+    if (!cleanTitle) {
+      toast.error("Escribe el nombre de la tarea")
+      return
+    }
+
+    void addTask({
+      title: cleanTitle,
+      description: description.trim(),
+      priority,
+      dueDate: dueDate ? toDateKey(dueDate) : null,
+    })
+
+    toast.success("Tarea creada correctamente", {
+      description: cleanTitle,
+    })
+
+    setTitle("")
+    setDescription("")
+    setPriority("medium")
+    setDueDate(undefined)
+  }
+
+  const priorityLabel =
+    priority === "low"
+      ? "Baja"
+      : priority === "medium"
+        ? "Media"
+        : "Alta"
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="grid gap-3 rounded-xl border bg-card p-4 shadow-sm md:grid-cols-2 xl:grid-cols-[1fr_1fr_150px_210px_auto]"
+    >
+      <Input
+        value={title}
+        onChange={(event) => setTitle(event.target.value)}
+        placeholder="Nombre de la tarea"
+        aria-label="Nombre de la tarea"
+      />
+
+      <Input
+        value={description}
+        onChange={(event) =>
+          setDescription(event.target.value)
+        }
+        placeholder="Descripción opcional"
+        aria-label="Descripción de la tarea"
+      />
+
+      <Select
+        value={priority}
+        onValueChange={(value) =>
+          setPriority(value as TaskPriority)
+        }
+      >
+        <SelectTrigger>
+          <span>{priorityLabel}</span>
+        </SelectTrigger>
+
+        <SelectContent>
+          <SelectItem value="low">Baja</SelectItem>
+          <SelectItem value="medium">Media</SelectItem>
+          <SelectItem value="high">Alta</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <DueDatePicker
+        value={dueDate}
+        onChange={setDueDate}
+      />
+
+      <Button type="submit" className="md:col-span-2 xl:col-span-1">
+        Agregar tarea
+      </Button>
+    </form>
+  )
+}
+
+=== src/store/task-store.ts ===
+import { create } from "zustand"
+
+import {
+  removeTask,
+  saveTask,
+  saveTaskOrder,
+} from "@/services/tasks"
+import type {
+  Task,
+  TaskPriority,
+  TaskStatus,
+} from "@/types/task"
+
+export type StatusFilter = "all" | TaskStatus
+export type PriorityFilter = "all" | TaskPriority
+
+export interface TaskInput {
+  title: string
+  description: string
+  priority: TaskPriority
+  dueDate: string | null
+}
+
+interface TaskState {
+  tasks: Task[]
+  userId: string | null
+  loadingTasks: boolean
+  search: string
+  statusFilter: StatusFilter
+  priorityFilter: PriorityFilter
+
+  setUserId: (userId: string | null) => void
+  setTasks: (tasks: Task[]) => void
+  setLoadingTasks: (loading: boolean) => void
+
+  addTask: (input: TaskInput) => Promise<void>
+  updateTask: (id: string, input: TaskInput) => Promise<void>
+  toggleTask: (id: string) => Promise<void>
+  deleteTask: (id: string) => Promise<void>
+  moveTask: (
+    activeId: string,
+    overId: string | null,
+    targetStatus: TaskStatus,
+  ) => Promise<void>
+
+  setSearch: (search: string) => void
+  setStatusFilter: (filter: StatusFilter) => void
+  setPriorityFilter: (filter: PriorityFilter) => void
+  clearFilters: () => void
+  resetTasks: () => void
+}
+
+function createId() {
+  return (
+    globalThis.crypto?.randomUUID?.() ??
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  )
+}
+
+export const useTaskStore = create<TaskState>((set, get) => ({
+  tasks: [],
+  userId: null,
+  loadingTasks: true,
+  search: "",
+  statusFilter: "all",
+  priorityFilter: "all",
+
+  setUserId: (userId) => set({ userId }),
+
+  setTasks: (tasks) =>
+    set({
+      tasks,
+      loadingTasks: false,
+    }),
+
+  setLoadingTasks: (loadingTasks) =>
+    set({ loadingTasks }),
+
+  addTask: async (input) => {
+    const { userId, tasks } = get()
+
+    if (!userId) {
+      throw new Error("No hay una sesión activa.")
+    }
+
+    const task: Task = {
+      id: createId(),
+      ...input,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+      order: tasks.length,
+    }
+
+    set({
+      tasks: [task, ...tasks],
+    })
+
+    await saveTask(userId, task)
+  },
+
+  updateTask: async (id, input) => {
+    const { userId, tasks } = get()
+
+    if (!userId) {
+      throw new Error("No hay una sesión activa.")
+    }
+
+    const updatedTasks = tasks.map((task) =>
+      task.id === id
+        ? {
+            ...task,
+            ...input,
+          }
+        : task,
+    )
+
+    const updatedTask = updatedTasks.find(
+      (task) => task.id === id,
+    )
+
+    if (!updatedTask) {
+      return
+    }
+
+    set({ tasks: updatedTasks })
+    await saveTask(userId, updatedTask)
+  },
+
+  toggleTask: async (id) => {
+    const { userId, tasks } = get()
+
+    if (!userId) {
+      throw new Error("No hay una sesión activa.")
+    }
+
+    const updatedTasks: Task[] = tasks.map((task) => {
+      if (task.id !== id) {
+        return task
+      }
+
+      const nextStatus: TaskStatus =
+        task.status === "pending"
+          ? "completed"
+          : "pending"
+
+      return {
+        ...task,
+        status: nextStatus,
+      }
+    })
+
+    const updatedTask = updatedTasks.find(
+      (task) => task.id === id,
+    )
+
+    if (!updatedTask) {
+      return
+    }
+
+    set({ tasks: updatedTasks })
+    await saveTask(userId, updatedTask)
+  },
+
+  deleteTask: async (id) => {
+    const { userId, tasks } = get()
+
+    if (!userId) {
+      throw new Error("No hay una sesión activa.")
+    }
+
+    set({
+      tasks: tasks.filter((task) => task.id !== id),
+    })
+
+    await removeTask(userId, id)
+  },
+
+  moveTask: async (
+    activeId,
+    overId,
+    targetStatus,
+  ) => {
+    const { userId, tasks } = get()
+
+    if (!userId) {
+      throw new Error("No hay una sesión activa.")
+    }
+
+    const activeIndex = tasks.findIndex(
+      (task) => task.id === activeId,
+    )
+
+    if (activeIndex < 0) {
+      return
+    }
+
+    const nextTasks = [...tasks]
+    const [activeTask] = nextTasks.splice(activeIndex, 1)
+
+    const movedTask: Task = {
+      ...activeTask,
+      status: targetStatus,
+    }
+
+    if (
+      overId &&
+      overId !== "pending" &&
+      overId !== "completed"
+    ) {
+      const overIndex = nextTasks.findIndex(
+        (task) => task.id === overId,
+      )
+
+      if (overIndex >= 0) {
+        nextTasks.splice(overIndex, 0, movedTask)
+      } else {
+        nextTasks.push(movedTask)
+      }
+    } else {
+      nextTasks.push(movedTask)
+    }
+
+    const orderedTasks = nextTasks.map((task, index) => ({
+      ...task,
+      order: index,
+    }))
+
+    set({ tasks: orderedTasks })
+    await saveTaskOrder(userId, orderedTasks)
+  },
+
+  setSearch: (search) => set({ search }),
+
+  setStatusFilter: (statusFilter) =>
+    set({ statusFilter }),
+
+  setPriorityFilter: (priorityFilter) =>
+    set({ priorityFilter }),
+
+  clearFilters: () =>
+    set({
+      search: "",
+      statusFilter: "all",
+      priorityFilter: "all",
+    }),
+
+  resetTasks: () =>
+    set({
+      tasks: [],
+      userId: null,
+      loadingTasks: true,
+      search: "",
+      statusFilter: "all",
+      priorityFilter: "all",
+    }),
+}))
+
+=== src/components/tasks/task-card.tsx ===
+import { useState } from "react"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { motion } from "framer-motion"
+import {
+  CalendarDays,
+  GripVertical,
+  Pencil,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react"
+import { toast } from "sonner"
+
+import { TaskEditDialog } from "@/components/tasks/task-edit-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useTaskStore } from "@/store/task-store"
+import type { Task, TaskPriority } from "@/types/task"
+
+interface TaskCardProps {
+  task: Task
+}
+
+const priorityLabels: Record<TaskPriority, string> = {
+  low: "Baja",
+  medium: "Media",
+  high: "Alta",
+}
+
+const priorityVariants: Record<
+  TaskPriority,
+  "secondary" | "default" | "destructive"
+> = {
+  low: "secondary",
+  medium: "default",
+  high: "destructive",
+}
+
+function parseDate(dateKey: string) {
+  return new Date(`${dateKey}T12:00:00`)
+}
+
+function formatDate(dateKey: string) {
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(parseDate(dateKey))
+}
+
+function isOverdue(task: Task) {
+  if (!task.dueDate || task.status === "completed") {
+    return false
+  }
+
+  const dueDate = parseDate(task.dueDate)
+  dueDate.setHours(23, 59, 59, 999)
+
+  return dueDate.getTime() < Date.now()
+}
+
+export function TaskCard({ task }: TaskCardProps) {
+  const [editOpen, setEditOpen] = useState(false)
+
+  const toggleTask = useTaskStore(
+    (state) => state.toggleTask,
+  )
+  const deleteTask = useTaskStore(
+    (state) => state.deleteTask,
+  )
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: task.id,
+    data: {
+      type: "task",
+      status: task.status,
+    },
+  })
+
+  const completed = task.status === "completed"
+  const overdue = isOverdue(task)
+
+  function handleToggle() {
+    void toggleTask(task.id)
+
+    toast.success(
+      completed
+        ? "Tarea marcada como pendiente"
+        : "Tarea completada",
+      {
+        description: task.title,
+      },
+    )
+  }
+
+  function handleDelete() {
+    void deleteTask(task.id)
+
+    toast.success("Tarea eliminada", {
+      description: task.title,
+    })
+  }
+
+  return (
+    <>
+      <div
+        ref={setNodeRef}
+        style={{
+          transform: CSS.Transform.toString(transform),
+          transition,
+          opacity: isDragging ? 0.45 : 1,
+          zIndex: isDragging ? 20 : undefined,
+        }}
+      >
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Card
+            className={
+              completed
+                ? "opacity-60"
+                : overdue
+                  ? "border-destructive/60"
+                  : ""
+            }
+          >
+            <CardHeader className="flex flex-row items-start gap-2 space-y-0">
+              <Button
+                ref={setActivatorNodeRef}
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="cursor-grab touch-none active:cursor-grabbing"
+                aria-label={`Arrastrar ${task.title}`}
+                {...attributes}
+                {...listeners}
+              >
+                <GripVertical className="size-4" />
+              </Button>
+
+              <Checkbox
+                checked={completed}
+                onCheckedChange={handleToggle}
+                aria-label={`Cambiar estado de ${task.title}`}
+              />
+
+              <div className="min-w-0 flex-1">
+                <CardTitle
+                  className={
+                    completed
+                      ? "break-words text-base line-through"
+                      : "break-words text-base"
+                  }
+                >
+                  {task.title}
+                </CardTitle>
+
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Badge
+                    variant={
+                      priorityVariants[task.priority]
+                    }
+                  >
+                    Prioridad{" "}
+                    {priorityLabels[task.priority]}
+                  </Badge>
+
+                  {overdue && (
+                    <Badge variant="destructive">
+                      <TriangleAlert className="size-3" />
+                      Vencida
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setEditOpen(true)}
+                aria-label={`Editar ${task.title}`}
+              >
+                <Pencil className="size-4" />
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handleDelete}
+                aria-label={`Eliminar ${task.title}`}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </CardHeader>
+
+            {(task.description || task.dueDate) && (
+              <CardContent className="grid gap-3">
+                {task.description && (
+                  <p className="break-words text-sm text-muted-foreground">
+                    {task.description}
+                  </p>
+                )}
+
+                {task.dueDate && (
+                  <div
+                    className={
+                      overdue
+                        ? "flex items-center gap-2 text-sm text-destructive"
+                        : "flex items-center gap-2 text-sm text-muted-foreground"
+                    }
+                  >
+                    <CalendarDays className="size-4 shrink-0" />
+
+                    <span>
+                      Fecha límite: {formatDate(task.dueDate)}
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            )}
+          </Card>
+        </motion.div>
+      </div>
+
+      <TaskEditDialog
+        task={task}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
+    </>
+  )
+}
+
+=== src/components/dashboard/task-filters.tsx ===
+import { Search, X } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  useTaskStore,
+  type PriorityFilter,
+  type StatusFilter,
+} from "@/store/task-store"
+
+export function TaskFilters() {
+  const search = useTaskStore((state) => state.search)
+  const statusFilter = useTaskStore(
+    (state) => state.statusFilter,
+  )
+  const priorityFilter = useTaskStore(
+    (state) => state.priorityFilter,
+  )
+
+  const setSearch = useTaskStore(
+    (state) => state.setSearch,
+  )
+  const setStatusFilter = useTaskStore(
+    (state) => state.setStatusFilter,
+  )
+  const setPriorityFilter = useTaskStore(
+    (state) => state.setPriorityFilter,
+  )
+  const clearFilters = useTaskStore(
+    (state) => state.clearFilters,
+  )
+
+  const hasFilters =
+    search !== "" ||
+    statusFilter !== "all" ||
+    priorityFilter !== "all"
+
+  return (
+    <section className="grid gap-3 rounded-xl border bg-card p-4 shadow-sm lg:grid-cols-[1fr_190px_190px_auto]">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+
+        <Input
+          value={search}
+          onChange={(event) =>
+            setSearch(event.target.value)
+          }
+          placeholder="Buscar tareas..."
+          className="pl-9"
+        />
+      </div>
+
+      <Select
+        value={statusFilter}
+        onValueChange={(value) =>
+          setStatusFilter(value as StatusFilter)
+        }
+      >
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+
+        <SelectContent>
+          <SelectItem value="all">
+            Todos los estados
+          </SelectItem>
+          <SelectItem value="pending">
+            Pendientes
+          </SelectItem>
+          <SelectItem value="completed">
+            Completadas
+          </SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={priorityFilter}
+        onValueChange={(value) =>
+          setPriorityFilter(value as PriorityFilter)
+        }
+      >
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+
+        <SelectContent>
+          <SelectItem value="all">
+            Todas las prioridades
+          </SelectItem>
+          <SelectItem value="low">Baja</SelectItem>
+          <SelectItem value="medium">Media</SelectItem>
+          <SelectItem value="high">Alta</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Button
+        type="button"
+        variant="outline"
+        disabled={!hasFilters}
+        onClick={clearFilters}
+      >
+        <X className="size-4" />
+        Limpiar
+      </Button>
+    </section>
+  )
+}
+
+=== SERVICES ===
+src/services/comments.ts
+src/services/subjects.ts
+src/services/profile.ts
+src/services/export-tasks.ts
+src/services/tasks.ts
+src/services/auth.ts

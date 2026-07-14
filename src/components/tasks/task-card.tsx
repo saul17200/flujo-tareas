@@ -175,6 +175,10 @@ export function TaskCard({ task }: TaskCardProps) {
                 </CardTitle>
 
                 <div className="mt-2 flex flex-wrap gap-2">
+                  <Badge variant="outline">
+                    {task.subjectName ?? "Sin materia"}
+                  </Badge>
+
                   <Badge
                     variant={
                       priorityVariants[task.priority]
