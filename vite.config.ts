@@ -15,10 +15,10 @@ export default defineConfig({
         "icon-512.svg",
       ],
       manifest: {
-        name: "FlujoTareas",
-        short_name: "FlujoTareas",
+        name: "Drif Notion",
+        short_name: "Drif Notion",
         description:
-          "Aplicación de productividad y gestión de tareas.",
+          "Organizador académico, de tareas y productividad.",
         theme_color: "#171717",
         background_color: "#ffffff",
         display: "standalone",

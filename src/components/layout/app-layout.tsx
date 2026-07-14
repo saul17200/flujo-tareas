@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Home,
   ListTodo,
+  School,
   LogOut,
   Menu,
   UserRound,
@@ -39,6 +40,11 @@ const navigationItems: NavigationItem[] = [
     label: "Mis tareas",
     path: "/tareas",
     icon: ListTodo,
+  },
+  {
+    label: "Horario",
+    path: "/horario",
+    icon: School,
   },
   {
     label: "Calendario",
@@ -145,7 +151,7 @@ export function AppLayout() {
 
           <div className="min-w-0">
             <p className="truncate text-lg font-bold">
-              FlujoTareas
+              Drif Notion
             </p>
 
             <p className="truncate text-xs text-muted-foreground">
@@ -210,7 +216,7 @@ export function AppLayout() {
 
               <div className="min-w-0 lg:hidden">
                 <p className="truncate font-bold">
-                  FlujoTareas
+                  Drif Notion
                 </p>
 
                 <p className="truncate text-xs text-muted-foreground">
@@ -254,7 +260,7 @@ export function AppLayout() {
 
                 <div>
                   <p className="font-bold">
-                    FlujoTareas
+                    Drif Notion
                   </p>
 
                   <p className="text-xs text-muted-foreground">

@@ -10,6 +10,7 @@ import { AuthPage } from "@/pages/auth-page"
 import { CalendarPage } from "@/pages/calendar-page"
 import { DashboardPage } from "@/pages/dashboard-page"
 import { ProfilePage } from "@/pages/profile-page"
+import { SchedulePage } from "@/pages/schedule-page"
 import { StatisticsPage } from "@/pages/statistics-page"
 import { TasksPage } from "@/pages/tasks-page"
 
@@ -32,6 +33,11 @@ function App() {
             <Route
               path="tareas"
               element={<TasksPage />}
+            />
+
+            <Route
+              path="horario"
+              element={<SchedulePage />}
             />
 
             <Route

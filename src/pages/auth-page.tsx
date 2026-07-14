@@ -153,7 +153,7 @@ export function AuthPage() {
             </div>
 
             <h1 className="text-3xl font-bold">
-              FlujoTareas
+              Drif Notion
             </h1>
 
             <p className="mt-2 text-muted-foreground">

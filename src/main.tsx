@@ -13,7 +13,7 @@ import { TaskSync } from "@/features/auth/task-sync"
 registerSW({
   immediate: true,
   onOfflineReady() {
-    console.info("FlujoTareas está disponible sin conexión.")
+    console.info("Drif Notion está disponible sin conexión.")
   },
 })
 

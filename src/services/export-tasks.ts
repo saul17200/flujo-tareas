@@ -71,7 +71,7 @@ export function exportTasksToExcel(tasks: Task[]) {
 
   XLSX.writeFile(
     workbook,
-    `FlujoTareas-${new Date().toISOString().slice(0, 10)}.xlsx`,
+    `Drif Notion-${new Date().toISOString().slice(0, 10)}.xlsx`,
   )
 }
 
@@ -85,7 +85,7 @@ export function exportTasksToPdf(tasks: Task[]) {
   })
 
   document.setFontSize(18)
-  document.text("FlujoTareas", 14, 18)
+  document.text("Drif Notion", 14, 18)
 
   document.setFontSize(10)
   document.text(
@@ -134,6 +134,6 @@ export function exportTasksToPdf(tasks: Task[]) {
   })
 
   document.save(
-    `FlujoTareas-${new Date().toISOString().slice(0, 10)}.pdf`,
+    `Drif Notion-${new Date().toISOString().slice(0, 10)}.pdf`,
   )
 }

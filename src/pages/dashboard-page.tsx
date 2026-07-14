@@ -92,7 +92,7 @@ export function DashboardPage() {
           </h2>
 
           <p className="mt-1 text-sm text-muted-foreground">
-            Abre las demás herramientas de FlujoTareas.
+            Abre las demás herramientas de Drif Notion.
           </p>
         </div>
 

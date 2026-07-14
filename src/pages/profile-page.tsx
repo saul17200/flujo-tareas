@@ -186,7 +186,7 @@ export function ProfilePage() {
               </div>
 
               <h2 className="mt-4 text-xl font-semibold">
-                {displayName || "Usuario de FlujoTareas"}
+                {displayName || "Usuario de Drif Notion"}
               </h2>
 
               <p className="mt-1 max-w-full truncate text-sm text-muted-foreground">
