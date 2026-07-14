@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Drifnotes</string>
+    <string name="title_activity_main">Drifnotes</string>
+    <string name="package_name">com.studiodrifweb.flujotareas</string>
+    <string name="custom_url_scheme">com.studiodrifweb.flujotareas</string>
+</resources>

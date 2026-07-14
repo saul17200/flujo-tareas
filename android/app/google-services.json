@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "73200773169",
+    "project_id": "flujotareas-web",
+    "storage_bucket": "flujotareas-web.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:73200773169:android:966781c27006a0ab548d10",
+        "android_client_info": {
+          "package_name": "com.studiodrifweb.flujotareas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBe7LeNlXxbGVgaBDhSTnebopR-IR3uxIo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
