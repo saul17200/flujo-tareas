@@ -10,7 +10,6 @@ import { Link } from "react-router"
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview"
 import { UpcomingDeadlines } from "@/components/dashboard/upcoming-deadlines"
 import { TaskForm } from "@/components/tasks/task-form"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -120,14 +119,13 @@ export function DashboardPage() {
                     </p>
                   </div>
 
-                  <Button
-                    render={<Link to={item.path} />}
-                    variant="ghost"
-                    className="w-fit px-0"
+                  <Link
+                    to={item.path}
+                    className="inline-flex h-8 w-fit items-center justify-center gap-1.5 rounded-lg px-0 text-sm font-medium text-primary transition-colors hover:underline"
                   >
                     Abrir sección
                     <ArrowRight className="size-4" />
-                  </Button>
+                  </Link>
                 </CardContent>
               </Card>
             )

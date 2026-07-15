@@ -1,7 +1,6 @@
 import { CheckSquare2 } from "lucide-react"
 import { Link } from "react-router"
 
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -95,13 +94,12 @@ export function SubjectTasks({
           </div>
         )}
 
-        <Button
-          render={<Link to="/tareas" />}
-          variant="outline"
-          className="mt-4"
+        <Link
+          to="/tareas"
+          className="mt-4 inline-flex h-8 w-fit items-center justify-center rounded-lg border border-border bg-background px-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground"
         >
           Ver todas las tareas
-        </Button>
+        </Link>
       </CardContent>
     </Card>
   )

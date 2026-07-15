@@ -198,7 +198,10 @@ export function SubjectPage() {
       )}
 
       {activeTab === "notes" && (
-        <SubjectNotes />
+        <SubjectNotes
+          planId={planId}
+          courseId={courseId}
+        />
       )}
 
       {activeTab === "files" && (
