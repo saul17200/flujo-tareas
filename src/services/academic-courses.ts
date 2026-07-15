@@ -118,6 +118,71 @@ export function observeAcademicCourses(
   )
 }
 
+
+export function observeAcademicCourse(
+  userId: string,
+  planId: string,
+  courseId: string,
+  onCourse: (course: AcademicCourse | null) => void,
+  onError: (error: Error) => void,
+) {
+  return onSnapshot(
+    courseDocument(userId, planId, courseId),
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        onCourse(null)
+        return
+      }
+
+      const data = snapshot.data()
+
+      const validStatuses: AcademicCourseStatus[] = [
+        "pending",
+        "in-progress",
+        "passed",
+        "failed",
+        "validated",
+      ]
+
+      const status =
+        typeof data.status === "string" &&
+        validStatuses.includes(
+          data.status as AcademicCourseStatus,
+        )
+          ? (data.status as AcademicCourseStatus)
+          : "pending"
+
+      onCourse({
+        id: snapshot.id,
+        code: String(data.code ?? ""),
+        name: String(data.name ?? ""),
+        semester:
+          typeof data.semester === "number"
+            ? data.semester
+            : 1,
+        credits:
+          typeof data.credits === "number"
+            ? data.credits
+            : 0,
+        status,
+        grade:
+          typeof data.grade === "number"
+            ? data.grade
+            : null,
+        createdAt: String(
+          data.createdAt ?? new Date().toISOString(),
+        ),
+        updatedAt: String(
+          data.updatedAt ??
+            data.createdAt ??
+            new Date().toISOString(),
+        ),
+      })
+    },
+    onError,
+  )
+}
+
 interface UpdateAcademicCourseInput {
   status?: AcademicCourseStatus
   grade?: number | null

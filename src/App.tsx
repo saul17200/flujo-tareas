@@ -13,6 +13,7 @@ import { DashboardPage } from "@/pages/dashboard-page"
 import { ProfilePage } from "@/pages/profile-page"
 import { SchedulePage } from "@/pages/schedule-page"
 import { StatisticsPage } from "@/pages/statistics-page"
+import { SubjectPage } from "@/pages/subject-page"
 import { TasksPage } from "@/pages/tasks-page"
 
 function App() {
@@ -49,6 +50,11 @@ function App() {
             <Route
               path="carrera"
               element={<CareerPage />}
+            />
+
+            <Route
+              path="carrera/:planId/materia/:courseId"
+              element={<SubjectPage />}
             />
 
             <Route

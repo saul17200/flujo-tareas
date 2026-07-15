@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Save,
 } from "lucide-react"
+import { useNavigate } from "react-router"
 import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
@@ -79,6 +80,44 @@ function isAccredited(
     status === "passed" ||
     status === "validated"
   )
+}
+
+function getSemesterStatistics(
+  courses: AcademicCourse[],
+) {
+  const accreditedCourses = courses.filter(
+    (course) => isAccredited(course.status),
+  )
+
+  const gradedCourses = accreditedCourses.filter(
+    (course) => course.grade !== null,
+  )
+
+  const average =
+    gradedCourses.length > 0
+      ? gradedCourses.reduce(
+          (total, course) =>
+            total + (course.grade ?? 0),
+          0,
+        ) / gradedCourses.length
+      : null
+
+  const earnedCredits = accreditedCourses.reduce(
+    (total, course) => total + course.credits,
+    0,
+  )
+
+  const totalCredits = courses.reduce(
+    (total, course) => total + course.credits,
+    0,
+  )
+
+  return {
+    average,
+    earnedCredits,
+    totalCredits,
+    accredited: accreditedCourses.length,
+  }
 }
 
 export function AcademicPlanProgress({
@@ -334,34 +373,69 @@ export function AcademicPlanProgress({
         </Card>
       ) : (
         coursesBySemester.map(
-          ([semester, semesterCourses]) => (
-            <Card key={semester}>
-              <CardHeader>
-                <CardTitle>
-                  Semestre {semester}
-                </CardTitle>
+          ([semester, semesterCourses]) => {
+            const semesterStatistics =
+              getSemesterStatistics(
+                semesterCourses,
+              )
 
-                <CardDescription>
-                  {semesterCourses.length}
-                  {semesterCourses.length === 1
-                    ? " materia"
-                    : " materias"}
-                </CardDescription>
-              </CardHeader>
+            return (
+              <Card key={semester}>
+                <CardHeader>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <CardTitle>
+                        Semestre {semester}
+                      </CardTitle>
 
-              <CardContent className="grid gap-3">
-                {semesterCourses.map(
-                  (course) => (
-                    <AcademicCourseRow
-                      key={course.id}
-                      planId={plan.id}
-                      course={course}
-                    />
-                  ),
-                )}
-              </CardContent>
-            </Card>
-          ),
+                      <CardDescription>
+                        {semesterCourses.length}
+                        {semesterCourses.length === 1
+                          ? " materia"
+                          : " materias"}
+                      </CardDescription>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      <SemesterStat
+                        label="Promedio"
+                        value={
+                          semesterStatistics.average ===
+                          null
+                            ? "—"
+                            : semesterStatistics.average.toFixed(
+                                1,
+                              )
+                        }
+                      />
+
+                      <SemesterStat
+                        label="Acreditadas"
+                        value={`${semesterStatistics.accredited}/${semesterCourses.length}`}
+                      />
+
+                      <SemesterStat
+                        label="Créditos"
+                        value={`${semesterStatistics.earnedCredits}/${semesterStatistics.totalCredits}`}
+                      />
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="grid gap-3">
+                  {semesterCourses.map(
+                    (course) => (
+                      <AcademicCourseRow
+                        key={course.id}
+                        planId={plan.id}
+                        course={course}
+                      />
+                    ),
+                  )}
+                </CardContent>
+              </Card>
+            )
+          },
         )
       )}
     </div>
@@ -378,6 +452,7 @@ function AcademicCourseRow({
   course,
 }: AcademicCourseRowProps) {
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   const [status, setStatus] =
     useState<AcademicCourseStatus>(
@@ -525,18 +600,54 @@ function AcademicCourseRow({
         aria-label={`Calificación de ${course.name}`}
       />
 
-      <Button
-        type="button"
-        onClick={() => void handleSave()}
-        disabled={saving}
-      >
-        <Save className="size-4" />
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() =>
+            navigate(
+              `/carrera/${planId}/materia/${course.id}`,
+            )
+          }
+        >
+          Abrir
+        </Button>
 
-        {saving
-          ? "Guardando..."
-          : "Guardar"}
-      </Button>
+        <Button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={saving}
+        >
+          <Save className="size-4" />
+
+          {saving
+            ? "Guardando..."
+            : "Guardar"}
+        </Button>
+      </div>
     </article>
+  )
+}
+
+interface SemesterStatProps {
+  label: string
+  value: string
+}
+
+function SemesterStat({
+  label,
+  value,
+}: SemesterStatProps) {
+  return (
+    <div className="min-w-24 rounded-lg border bg-background px-3 py-2">
+      <p className="text-lg font-bold">
+        {value}
+      </p>
+
+      <p className="text-xs text-muted-foreground">
+        {label}
+      </p>
+    </div>
   )
 }
 
