@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout/app-layout"
 import { ProtectedRoute } from "@/features/auth/protected-route"
 import { AuthPage } from "@/pages/auth-page"
 import { CalendarPage } from "@/pages/calendar-page"
+import { CareerPage } from "@/pages/career-page"
 import { DashboardPage } from "@/pages/dashboard-page"
 import { ProfilePage } from "@/pages/profile-page"
 import { SchedulePage } from "@/pages/schedule-page"
@@ -43,6 +44,11 @@ function App() {
             <Route
               path="calendario"
               element={<CalendarPage />}
+            />
+
+            <Route
+              path="carrera"
+              element={<CareerPage />}
             />
 
             <Route

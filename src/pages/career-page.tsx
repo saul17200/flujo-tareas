@@ -1,0 +1,491 @@
+import {
+  useEffect,
+  useState,
+  type FormEvent,
+} from "react"
+import {
+  BookOpen,
+  Building2,
+  Check,
+  GraduationCap,
+  Plus,
+  Trash2,
+} from "lucide-react"
+import { toast } from "sonner"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useAuth } from "@/features/auth/auth-provider"
+import {
+  createAcademicPlan,
+  observeAcademicPlans,
+  removeAcademicPlan,
+} from "@/services/academic-plans"
+import type { AcademicPlan } from "@/types/academic-plan"
+
+const ACTIVE_PLAN_STORAGE_KEY =
+  "drif-notion-active-academic-plan"
+
+export function CareerPage() {
+  const { user } = useAuth()
+
+  const [plans, setPlans] = useState<AcademicPlan[]>([])
+  const [activePlanId, setActivePlanId] = useState<
+    string | null
+  >(() => localStorage.getItem(ACTIVE_PLAN_STORAGE_KEY))
+
+  const [name, setName] = useState("")
+  const [institution, setInstitution] = useState("")
+  const [career, setCareer] = useState("")
+  const [curriculum, setCurriculum] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!user) {
+      setPlans([])
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+
+    return observeAcademicPlans(
+      user.uid,
+      (nextPlans) => {
+        setPlans(nextPlans)
+        setLoading(false)
+
+        const activeStillExists = nextPlans.some(
+          (plan) => plan.id === activePlanId,
+        )
+
+        if (!activeStillExists && nextPlans.length > 0) {
+          const firstPlanId = nextPlans[0].id
+
+          setActivePlanId(firstPlanId)
+          localStorage.setItem(
+            ACTIVE_PLAN_STORAGE_KEY,
+            firstPlanId,
+          )
+        }
+
+        if (nextPlans.length === 0) {
+          setActivePlanId(null)
+          localStorage.removeItem(
+            ACTIVE_PLAN_STORAGE_KEY,
+          )
+        }
+      },
+      (error) => {
+        console.error(error)
+        setLoading(false)
+
+        toast.error(
+          "No fue posible cargar tus planes académicos.",
+        )
+      },
+    )
+  }, [activePlanId, user])
+
+  function selectPlan(planId: string) {
+    setActivePlanId(planId)
+
+    localStorage.setItem(
+      ACTIVE_PLAN_STORAGE_KEY,
+      planId,
+    )
+  }
+
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+
+    if (!user) {
+      return
+    }
+
+    if (name.trim().length < 2) {
+      toast.error("Escribe un nombre para el plan.")
+      return
+    }
+
+    if (career.trim().length < 2) {
+      toast.error("Escribe el nombre de la carrera.")
+      return
+    }
+
+    try {
+      setSaving(true)
+
+      await createAcademicPlan(user.uid, {
+        name,
+        institution,
+        career,
+        curriculum,
+      })
+
+      setName("")
+      setInstitution("")
+      setCareer("")
+      setCurriculum("")
+
+      toast.success("Plan académico creado.")
+    } catch (error) {
+      console.error(error)
+
+      toast.error(
+        "No fue posible crear el plan académico.",
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete(plan: AcademicPlan) {
+    if (!user) {
+      return
+    }
+
+    const confirmed = window.confirm(
+      `¿Eliminar el plan "${plan.name}"?`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      await removeAcademicPlan(user.uid, plan.id)
+
+      toast.success("Plan académico eliminado.")
+    } catch (error) {
+      console.error(error)
+
+      toast.error(
+        "No fue posible eliminar el plan académico.",
+      )
+    }
+  }
+
+  const activePlan =
+    plans.find((plan) => plan.id === activePlanId) ??
+    null
+
+  return (
+    <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:px-8">
+      <section>
+        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
+          <GraduationCap className="size-4" />
+          Seguimiento académico
+        </div>
+
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          Mi carrera
+        </h1>
+
+        <p className="mt-2 text-muted-foreground">
+          Administra tus carreras, planes de estudio y
+          progreso académico.
+        </p>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[380px_1fr]">
+        <Card className="h-fit">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="size-5" />
+              Nuevo plan
+            </CardTitle>
+
+            <CardDescription>
+              Registra una carrera, diplomado o certificación.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form
+              onSubmit={handleSubmit}
+              className="grid gap-4"
+            >
+              <div className="grid gap-2">
+                <Label htmlFor="plan-name">
+                  Nombre del plan
+                </Label>
+
+                <Input
+                  id="plan-name"
+                  value={name}
+                  onChange={(event) =>
+                    setName(event.target.value)
+                  }
+                  placeholder="Mi Ingeniería"
+                  maxLength={80}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="institution">
+                  Institución
+                </Label>
+
+                <Input
+                  id="institution"
+                  value={institution}
+                  onChange={(event) =>
+                    setInstitution(event.target.value)
+                  }
+                  placeholder="IPN, TecNM, UNAM..."
+                  maxLength={100}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="career">
+                  Carrera o programa
+                </Label>
+
+                <Input
+                  id="career"
+                  value={career}
+                  onChange={(event) =>
+                    setCareer(event.target.value)
+                  }
+                  placeholder="Ingeniería en Informática"
+                  maxLength={120}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="curriculum">
+                  Plan o retícula
+                </Label>
+
+                <Input
+                  id="curriculum"
+                  value={curriculum}
+                  onChange={(event) =>
+                    setCurriculum(event.target.value)
+                  }
+                  placeholder="Plan 2024"
+                  maxLength={60}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={saving}
+              >
+                <GraduationCap className="size-4" />
+
+                {saving
+                  ? "Guardando..."
+                  : "Crear plan académico"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Planes académicos</CardTitle>
+
+              <CardDescription>
+                Puedes registrar varias carreras o programas.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              {loading ? (
+                <div className="flex min-h-48 items-center justify-center text-sm text-muted-foreground">
+                  Cargando planes...
+                </div>
+              ) : plans.length === 0 ? (
+                <div className="flex min-h-56 flex-col items-center justify-center rounded-xl border border-dashed text-center">
+                  <GraduationCap className="mb-3 size-10 text-muted-foreground" />
+
+                  <p className="font-medium">
+                    No tienes planes registrados
+                  </p>
+
+                  <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                    Crea tu primer plan académico para comenzar
+                    a registrar materias y avance.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {plans.map((plan) => {
+                    const active =
+                      plan.id === activePlanId
+
+                    return (
+                      <article
+                        key={plan.id}
+                        className={[
+                          "rounded-xl border p-4 transition-colors",
+                          active
+                            ? "border-primary bg-primary/5"
+                            : "hover:bg-muted/40",
+                        ].join(" ")}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              selectPlan(plan.id)
+                            }
+                            className="min-w-0 flex-1 text-left"
+                          >
+                            <div className="flex items-center gap-2">
+                              <h3 className="truncate font-semibold">
+                                {plan.name}
+                              </h3>
+
+                              {active && (
+                                <Badge>
+                                  <Check className="size-3" />
+                                  Activo
+                                </Badge>
+                              )}
+                            </div>
+
+                            <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                              <BookOpen className="size-4 shrink-0" />
+
+                              <span className="truncate">
+                                {plan.career}
+                              </span>
+                            </p>
+
+                            {plan.institution && (
+                              <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                                <Building2 className="size-4 shrink-0" />
+
+                                <span className="truncate">
+                                  {plan.institution}
+                                </span>
+                              </p>
+                            )}
+                          </button>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              void handleDelete(plan)
+                            }
+                            aria-label={`Eliminar ${plan.name}`}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      </article>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Plan activo</CardTitle>
+
+              <CardDescription>
+                Aquí aparecerán las materias, créditos y
+                estadísticas del plan seleccionado.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              {activePlan ? (
+                <div className="rounded-xl border bg-muted/30 p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                      <GraduationCap className="size-6" />
+                    </div>
+
+                    <div className="min-w-0">
+                      <h3 className="text-xl font-semibold">
+                        {activePlan.career}
+                      </h3>
+
+                      <p className="mt-1 text-muted-foreground">
+                        {activePlan.institution ||
+                          "Institución no especificada"}
+                      </p>
+
+                      <Badge
+                        variant="secondary"
+                        className="mt-3"
+                      >
+                        {activePlan.curriculum ||
+                          "Plan sin especificar"}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                    <StatPlaceholder
+                      value="0"
+                      label="Materias"
+                    />
+
+                    <StatPlaceholder
+                      value="0%"
+                      label="Avance"
+                    />
+
+                    <StatPlaceholder
+                      value="—"
+                      label="Promedio"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                  Selecciona o crea un plan académico.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+interface StatPlaceholderProps {
+  value: string
+  label: string
+}
+
+function StatPlaceholder({
+  value,
+  label,
+}: StatPlaceholderProps) {
+  return (
+    <div className="rounded-xl border bg-background p-4">
+      <p className="text-2xl font-bold">
+        {value}
+      </p>
+
+      <p className="mt-1 text-sm text-muted-foreground">
+        {label}
+      </p>
+    </div>
+  )
+}

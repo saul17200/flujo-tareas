@@ -2,6 +2,7 @@ import { useState } from "react"
 import {
   BarChart3,
   CalendarDays,
+  GraduationCap,
   CheckCircle2,
   Home,
   ListTodo,
@@ -50,6 +51,11 @@ const navigationItems: NavigationItem[] = [
     label: "Calendario",
     path: "/calendario",
     icon: CalendarDays,
+  },
+  {
+    label: "Mi carrera",
+    path: "/carrera",
+    icon: GraduationCap,
   },
   {
     label: "Estadísticas",
