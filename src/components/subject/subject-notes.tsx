@@ -72,9 +72,8 @@ export function SubjectNotes({
   const [saving, setSaving] = useState(false)
 
   const selectedNote =
-    notes.find(
-      (note) => note.id === selectedNoteId,
-    ) ?? null
+    notes.find((note) => note.id === selectedNoteId) ??
+    null
 
   useEffect(() => {
     if (!user) {
@@ -92,27 +91,28 @@ export function SubjectNotes({
       (nextNotes) => {
         setNotes(nextNotes)
         setLoading(false)
+
+        if (selectedNoteId) {
+          const updatedSelectedNote = nextNotes.find(
+            (note) => note.id === selectedNoteId,
+          )
+
+          if (!updatedSelectedNote) {
+            resetEditor()
+          }
+        }
       },
       (error) => {
         console.error(error)
         setLoading(false)
-
         toast.error(
           "No fue posible cargar las notas.",
         )
       },
     )
-  }, [courseId, planId, user])
+  }, [courseId, planId, selectedNoteId, user])
 
-  function resetEditor() {
-    setSelectedNoteId(null)
-    setTitle("")
-    setContent("")
-  }
-
-  function startNewNote() {
-    resetEditor()
-
+  function focusEditor() {
     window.requestAnimationFrame(() => {
       titleInputRef.current?.focus()
       titleInputRef.current?.scrollIntoView({
@@ -122,27 +122,36 @@ export function SubjectNotes({
     })
   }
 
+  function resetEditor() {
+    setSelectedNoteId(null)
+    setTitle("")
+    setContent("")
+  }
+
+  function startNewNote() {
+    resetEditor()
+    focusEditor()
+  }
+
   function startEditing(note: SubjectNote) {
     setSelectedNoteId(note.id)
     setTitle(note.title)
     setContent(note.content)
+    focusEditor()
   }
 
   async function handleSaveNote() {
-    console.info("[Notas] Guardado solicitado", {
-      hasUser: Boolean(user),
-      planId,
-      courseId,
-      title,
-    })
-
     if (!user) {
       toast.error("No hay una sesión activa.")
       return
     }
 
-    if (!title.trim()) {
+    const cleanTitle = title.trim()
+    const cleanContent = content.trim()
+
+    if (!cleanTitle) {
       toast.error("Escribe un título para la nota.")
+      titleInputRef.current?.focus()
       return
     }
 
@@ -156,24 +165,24 @@ export function SubjectNotes({
           courseId,
           selectedNoteId,
           {
-            title,
-            content,
+            title: cleanTitle,
+            content: cleanContent,
           },
         )
 
-        toast.success("Nota actualizada.")
+        toast.success("Nota actualizada correctamente.")
       } else {
         await createSubjectNote(
           user.uid,
           planId,
           courseId,
           {
-            title,
-            content,
+            title: cleanTitle,
+            content: cleanContent,
           },
         )
 
-        toast.success("Nota creada.")
+        toast.success("Nota creada correctamente.")
       }
 
       resetEditor()
@@ -183,16 +192,14 @@ export function SubjectNotes({
         error,
       )
 
-      const firebaseError =
-        error as {
-          code?: string
-          message?: string
-        }
+      const firebaseError = error as {
+        code?: string
+        message?: string
+      }
 
       toast.error(
-        firebaseError.code ===
-          "permission-denied"
-          ? "Firestore no permite guardar esta nota. Revisa las reglas."
+        firebaseError.code === "permission-denied"
+          ? "Firestore no permite guardar esta nota."
           : firebaseError.message ??
               "No fue posible guardar la nota.",
       )
@@ -253,6 +260,7 @@ export function SubjectNotes({
               size="icon"
               onClick={startNewNote}
               aria-label="Crear nota"
+              title="Nueva nota"
             >
               <Plus className="size-4" />
             </Button>
@@ -310,9 +318,8 @@ export function SubjectNotes({
                         </p>
 
                         <p className="mt-2 text-xs text-muted-foreground">
-                          {formatNoteDate(
-                            note.updatedAt,
-                          )}
+                          Actualizada{" "}
+                          {formatNoteDate(note.updatedAt)}
                         </p>
                       </button>
 
@@ -324,7 +331,7 @@ export function SubjectNotes({
                           onClick={() =>
                             startEditing(note)
                           }
-                          aria-label="Editar nota"
+                          aria-label={`Editar ${note.title}`}
                         >
                           <Pencil className="size-4" />
                         </Button>
@@ -336,7 +343,7 @@ export function SubjectNotes({
                           onClick={() =>
                             void handleDelete(note)
                           }
-                          aria-label="Eliminar nota"
+                          aria-label={`Eliminar ${note.title}`}
                         >
                           <Trash2 className="size-4" />
                         </Button>
@@ -359,8 +366,9 @@ export function SubjectNotes({
           </CardTitle>
 
           <CardDescription>
-            Guarda apuntes, resúmenes, enlaces o
-            recordatorios de esta materia.
+            {selectedNote
+              ? "Modifica el contenido y guarda los cambios."
+              : "Guarda apuntes, resúmenes, enlaces o recordatorios."}
           </CardDescription>
         </CardHeader>
 
@@ -412,7 +420,7 @@ export function SubjectNotes({
                 disabled={saving}
               >
                 <X className="size-4" />
-                Limpiar
+                {selectedNote ? "Cancelar edición" : "Limpiar"}
               </Button>
 
               <button
