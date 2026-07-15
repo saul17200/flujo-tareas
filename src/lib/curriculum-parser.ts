@@ -1,172 +1,372 @@
 import type {
+  PositionedPdfText,
+} from "@/lib/pdf"
+import type {
   AcademicCourseDraft,
   AcademicPlanDraft,
 } from "@/types/academic-plan"
 
-const courseLinePatterns = [
-  /^([A-ZÁÉÍÓÚÑ]{2,}\s?[-\d]{2,})\s+(.+?)\s+(\d{1,2})$/,
-  /^([A-Z]{2,}\d{2,})\s+(.+?)\s+(\d{1,2})$/,
-]
+const COURSE_CODE_PATTERN =
+  /^[A-ZÁÉÍÓÚÑ]{3}-\d{4}$/i
 
 function createTemporaryId() {
   return (
     globalThis.crypto?.randomUUID?.() ??
-    `${Date.now()}-${Math.random().toString(16).slice(2)}`
+    `${Date.now()}-${Math.random()
+      .toString(16)
+      .slice(2)}`
   )
 }
 
-function cleanLine(line: string) {
-  return line
+function normalizeText(value: string) {
+  return value
     .replace(/\s+/g, " ")
     .replace(/[|•·]/g, " ")
     .trim()
 }
 
 function detectInstitution(text: string) {
-  const candidates = [
+  const normalized = text.toLocaleLowerCase("es")
+
+  if (
+    normalized.includes("tecnm.mx") ||
+    normalized.includes(
+      "tecnológico nacional de méxico",
+    )
+  ) {
+    return "Tecnológico Nacional de México"
+  }
+
+  const institutions = [
     "Instituto Politécnico Nacional",
-    "Tecnológico Nacional de México",
     "Universidad Nacional Autónoma de México",
     "Universidad Autónoma Metropolitana",
   ]
 
   return (
-    candidates.find((candidate) =>
-      text
-        .toLocaleLowerCase("es")
-        .includes(candidate.toLocaleLowerCase("es")),
+    institutions.find((institution) =>
+      normalized.includes(
+        institution.toLocaleLowerCase("es"),
+      ),
     ) ?? ""
   )
 }
 
 function detectCareer(text: string) {
-  const match = text.match(
-    /(ingeniería|licenciatura|técnico superior universitario)\s+en\s+[^\n]{3,100}/i,
+  const normalized = normalizeText(text)
+
+  const match = normalized.match(
+    /(ingeniería|licenciatura|técnico superior universitario)\s+(en\s+)?[a-záéíóúñ ]{3,80}/i,
   )
 
-  return match?.[0]?.trim() ?? ""
-}
-
-function detectCurriculum(text: string) {
-  const match = text.match(
-    /(plan|retícula)\s*(de estudios)?\s*[:\-]?\s*([A-Z0-9\-]{4,30})/i,
-  )
-
-  return match?.[0]?.trim() ?? ""
-}
-
-function detectSemester(line: string) {
-  const numericMatch = line.match(
-    /(?:semestre|nivel)\s*(\d{1,2})/i,
-  )
-
-  if (numericMatch) {
-    return Number(numericMatch[1])
+  if (!match) {
+    return ""
   }
 
-  const names: Record<string, number> = {
-    primero: 1,
-    primer: 1,
-    segundo: 2,
-    tercero: 3,
-    cuarto: 4,
-    quinto: 5,
-    sexto: 6,
-    séptimo: 7,
-    septimo: 7,
-    octavo: 8,
-    noveno: 9,
-    décimo: 10,
-    decimo: 10,
+  let career = match[0].trim()
+
+  const stopPatterns = [
+    /\s+[A-Z]{3}-\d{4}.*/i,
+    /\s+\d+\s+\d+\s+\d+.*/,
+  ]
+
+  for (const pattern of stopPatterns) {
+    career = career.replace(pattern, "").trim()
   }
 
-  const lowerLine = line.toLocaleLowerCase("es")
+  return career
+}
 
-  for (const [name, semester] of Object.entries(names)) {
-    if (
-      lowerLine.includes(name) &&
-      lowerLine.includes("semestre")
-    ) {
-      return semester
+function detectCurriculum(
+  text: string,
+  items: PositionedPdfText[],
+) {
+  const directMatch = text.match(
+    /\b[A-Z]{3,5}-\d{4}-\d{2,4}\b/,
+  )
+
+  if (directMatch) {
+    return directMatch[0]
+  }
+
+  const candidate = items.find((item) =>
+    /^[A-Z]{3,5}-\d{4}-\d{2,4}$/.test(
+      item.text,
+    ),
+  )
+
+  return candidate?.text ?? ""
+}
+
+function clusterColumnCenters(
+  codeItems: PositionedPdfText[],
+) {
+  const sortedCenters = codeItems
+    .map((item) => item.x + item.width / 2)
+    .sort((a, b) => a - b)
+
+  const clusters: number[][] = []
+
+  for (const center of sortedCenters) {
+    const existing = clusters.find((cluster) => {
+      const average =
+        cluster.reduce((sum, value) => sum + value, 0) /
+        cluster.length
+
+      return Math.abs(average - center) < 24
+    })
+
+    if (existing) {
+      existing.push(center)
+    } else {
+      clusters.push([center])
     }
   }
 
-  return null
+  return clusters
+    .map(
+      (cluster) =>
+        cluster.reduce(
+          (sum, value) => sum + value,
+          0,
+        ) / cluster.length,
+    )
+    .sort((a, b) => a - b)
 }
 
-function detectCourses(text: string) {
-  const lines = text
-    .split(/\n+/)
-    .map(cleanLine)
-    .filter((line) => line.length >= 5)
+function findClosestColumn(
+  item: PositionedPdfText,
+  centers: number[],
+) {
+  const itemCenter = item.x + item.width / 2
+
+  let closestIndex = 0
+  let closestDistance = Number.POSITIVE_INFINITY
+
+  centers.forEach((center, index) => {
+    const distance = Math.abs(center - itemCenter)
+
+    if (distance < closestDistance) {
+      closestIndex = index
+      closestDistance = distance
+    }
+  })
+
+  return closestIndex
+}
+
+function getCourseName(
+  codeItem: PositionedPdfText,
+  pageItems: PositionedPdfText[],
+  columnCenter: number,
+) {
+  const candidates = pageItems.filter((item) => {
+    const itemCenter = item.x + item.width / 2
+
+    const isSameColumn =
+      Math.abs(itemCenter - columnCenter) < 36
+
+    const isAboveCode =
+      item.y >= codeItem.y - 42 &&
+      item.y < codeItem.y - 2
+
+    const isUsefulText =
+      !COURSE_CODE_PATTERN.test(item.text) &&
+      !/^\d+$/.test(item.text) &&
+      item.text.length > 1
+
+    return (
+      isSameColumn &&
+      isAboveCode &&
+      isUsefulText
+    )
+  })
+
+  if (candidates.length === 0) {
+    return ""
+  }
+
+  const groupedLines = new Map<
+    number,
+    PositionedPdfText[]
+  >()
+
+  for (const candidate of candidates) {
+    const roundedY = Math.round(candidate.y / 3) * 3
+    const line = groupedLines.get(roundedY) ?? []
+
+    line.push(candidate)
+    groupedLines.set(roundedY, line)
+  }
+
+  const lines = Array.from(groupedLines.entries())
+    .sort(([firstY], [secondY]) => firstY - secondY)
+    .map(([, lineItems]) =>
+      lineItems
+        .sort((a, b) => a.x - b.x)
+        .map((item) => item.text)
+        .join(" "),
+    )
+    .filter(Boolean)
+
+  return normalizeText(lines.join(" "))
+}
+
+function getCourseCredits(
+  codeItem: PositionedPdfText,
+  pageItems: PositionedPdfText[],
+  columnCenter: number,
+) {
+  const numericItems = pageItems
+    .filter((item) => {
+      const itemCenter = item.x + item.width / 2
+
+      return (
+        /^\d{1,2}$/.test(item.text) &&
+        Math.abs(itemCenter - columnCenter) < 39 &&
+        item.y > codeItem.y + 1 &&
+        item.y < codeItem.y + 22
+      )
+    })
+    .sort((a, b) => a.x - b.x)
+
+  if (numericItems.length === 0) {
+    return 0
+  }
+
+  const lastValue = Number(
+    numericItems[numericItems.length - 1].text,
+  )
+
+  return Number.isFinite(lastValue)
+    ? lastValue
+    : 0
+}
+
+function detectCourses(
+  items: PositionedPdfText[],
+) {
+  const firstPageItems = items.filter(
+    (item) => item.page === 1,
+  )
+
+  const codeItems = firstPageItems.filter((item) =>
+    COURSE_CODE_PATTERN.test(item.text),
+  )
+
+  const columnCenters =
+    clusterColumnCenters(codeItems)
 
   const courses: AcademicCourseDraft[] = []
-  let currentSemester = 1
 
-  for (const line of lines) {
-    const detectedSemester = detectSemester(line)
+  for (const codeItem of codeItems) {
+    const columnIndex = findClosestColumn(
+      codeItem,
+      columnCenters,
+    )
 
-    if (detectedSemester) {
-      currentSemester = detectedSemester
+    const semester = Math.min(
+      columnIndex + 1,
+      20,
+    )
+
+    const columnCenter =
+      columnCenters[columnIndex] ??
+      codeItem.x + codeItem.width / 2
+
+    const name = getCourseName(
+      codeItem,
+      firstPageItems,
+      columnCenter,
+    )
+
+    if (!name || name.length < 3) {
       continue
     }
 
-    for (const pattern of courseLinePatterns) {
-      const match = line.match(pattern)
+    const credits = getCourseCredits(
+      codeItem,
+      firstPageItems,
+      columnCenter,
+    )
 
-      if (!match) {
-        continue
-      }
+    const duplicate = courses.some(
+      (course) =>
+        course.code.toUpperCase() ===
+        codeItem.text.toUpperCase(),
+    )
 
-      const [, code, name, creditsText] = match
-      const credits = Number(creditsText)
-
-      if (
-        name.length < 3 ||
-        name.length > 120 ||
-        credits < 0 ||
-        credits > 30
-      ) {
-        continue
-      }
-
-      const duplicate = courses.some(
-        (course) =>
-          course.code === code &&
-          course.semester === currentSemester,
-      )
-
-      if (!duplicate) {
-        courses.push({
-          temporaryId: createTemporaryId(),
-          code: code.trim(),
-          name: name.trim(),
-          semester: currentSemester,
-          credits,
-        })
-      }
-
-      break
+    if (duplicate) {
+      continue
     }
+
+    courses.push({
+      temporaryId: createTemporaryId(),
+      code: codeItem.text.toUpperCase(),
+      name,
+      semester,
+      credits,
+    })
   }
 
-  return courses
+  return courses.sort((a, b) => {
+    if (a.semester !== b.semester) {
+      return a.semester - b.semester
+    }
+
+    return a.name.localeCompare(b.name, "es")
+  })
 }
 
+export function createAcademicPlanDraftFromLayout(
+  text: string,
+  items: PositionedPdfText[],
+  file: File,
+): AcademicPlanDraft {
+  const career =
+    detectCareer(text) || "Ingeniería Informática"
+
+  const institution = detectInstitution(text)
+  const curriculum = detectCurriculum(
+    text,
+    items,
+  )
+
+  const courses = detectCourses(items)
+
+  return {
+    name:
+      curriculum ||
+      career ||
+      file.name.replace(/\.pdf$/i, ""),
+    institution,
+    career,
+    curriculum,
+    courses,
+    sourceFile: file,
+    sourceFileName: file.name,
+    extractedText: text,
+  }
+}
+
+/**
+ * Compatibilidad con código anterior.
+ */
 export function createAcademicPlanDraft(
   text: string,
   file: File,
 ): AcademicPlanDraft {
-  const career = detectCareer(text)
-  const institution = detectInstitution(text)
-  const curriculum = detectCurriculum(text)
-
   return {
-    name: career || file.name.replace(/\.pdf$/i, ""),
-    institution,
-    career,
-    curriculum,
-    courses: detectCourses(text),
+    name: file.name.replace(/\.pdf$/i, ""),
+    institution: detectInstitution(text),
+    career:
+      detectCareer(text) ||
+      "Ingeniería Informática",
+    curriculum:
+      text.match(
+        /\b[A-Z]{3,5}-\d{4}-\d{2,4}\b/,
+      )?.[0] ?? "",
+    courses: [],
     sourceFile: file,
     sourceFileName: file.name,
     extractedText: text,

@@ -1,18 +1,17 @@
 import {
   useEffect,
   useState,
-  type FormEvent,
 } from "react"
 import {
   BookOpen,
   Building2,
   Check,
   GraduationCap,
-  Plus,
   Trash2,
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { AcademicPlanWizard } from "@/components/academic/academic-plan-wizard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,11 +21,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { useAuth } from "@/features/auth/auth-provider"
 import {
-  createAcademicPlan,
   observeAcademicPlans,
   removeAcademicPlan,
 } from "@/services/academic-plans"
@@ -43,12 +39,7 @@ export function CareerPage() {
     string | null
   >(() => localStorage.getItem(ACTIVE_PLAN_STORAGE_KEY))
 
-  const [name, setName] = useState("")
-  const [institution, setInstitution] = useState("")
-  const [career, setCareer] = useState("")
-  const [curriculum, setCurriculum] = useState("")
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -106,52 +97,6 @@ export function CareerPage() {
     )
   }
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault()
-
-    if (!user) {
-      return
-    }
-
-    if (name.trim().length < 2) {
-      toast.error("Escribe un nombre para el plan.")
-      return
-    }
-
-    if (career.trim().length < 2) {
-      toast.error("Escribe el nombre de la carrera.")
-      return
-    }
-
-    try {
-      setSaving(true)
-
-      await createAcademicPlan(user.uid, {
-        name,
-        institution,
-        career,
-        curriculum,
-      })
-
-      setName("")
-      setInstitution("")
-      setCareer("")
-      setCurriculum("")
-
-      toast.success("Plan académico creado.")
-    } catch (error) {
-      console.error(error)
-
-      toast.error(
-        "No fue posible crear el plan académico.",
-      )
-    } finally {
-      setSaving(false)
-    }
-  }
-
   async function handleDelete(plan: AcademicPlan) {
     if (!user) {
       return
@@ -200,103 +145,19 @@ export function CareerPage() {
         </p>
       </section>
 
+
+      <AcademicPlanWizard
+        onCreated={(planId) => {
+          setActivePlanId(planId)
+          localStorage.setItem(
+            ACTIVE_PLAN_STORAGE_KEY,
+            planId,
+          )
+        }}
+      />
+
       <section className="grid gap-6 xl:grid-cols-[380px_1fr]">
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="size-5" />
-              Nuevo plan
-            </CardTitle>
-
-            <CardDescription>
-              Registra una carrera, diplomado o certificación.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <form
-              onSubmit={handleSubmit}
-              className="grid gap-4"
-            >
-              <div className="grid gap-2">
-                <Label htmlFor="plan-name">
-                  Nombre del plan
-                </Label>
-
-                <Input
-                  id="plan-name"
-                  value={name}
-                  onChange={(event) =>
-                    setName(event.target.value)
-                  }
-                  placeholder="Mi Ingeniería"
-                  maxLength={80}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="institution">
-                  Institución
-                </Label>
-
-                <Input
-                  id="institution"
-                  value={institution}
-                  onChange={(event) =>
-                    setInstitution(event.target.value)
-                  }
-                  placeholder="IPN, TecNM, UNAM..."
-                  maxLength={100}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="career">
-                  Carrera o programa
-                </Label>
-
-                <Input
-                  id="career"
-                  value={career}
-                  onChange={(event) =>
-                    setCareer(event.target.value)
-                  }
-                  placeholder="Ingeniería en Informática"
-                  maxLength={120}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="curriculum">
-                  Plan o retícula
-                </Label>
-
-                <Input
-                  id="curriculum"
-                  value={curriculum}
-                  onChange={(event) =>
-                    setCurriculum(event.target.value)
-                  }
-                  placeholder="Plan 2024"
-                  maxLength={60}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={saving}
-              >
-                <GraduationCap className="size-4" />
-
-                {saving
-                  ? "Guardando..."
-                  : "Crear plan académico"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-6">
+        <div className="grid gap-6 xl:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle>Planes académicos</CardTitle>
