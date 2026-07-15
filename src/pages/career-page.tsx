@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner"
 
 import { AcademicPlanWizard } from "@/components/academic/academic-plan-wizard"
+import { AcademicPlanProgress } from "@/components/academic/academic-plan-progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -299,22 +300,7 @@ export function CareerPage() {
                     </div>
                   </div>
 
-                  <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                    <StatPlaceholder
-                      value="0"
-                      label="Materias"
-                    />
 
-                    <StatPlaceholder
-                      value="0%"
-                      label="Avance"
-                    />
-
-                    <StatPlaceholder
-                      value="—"
-                      label="Promedio"
-                    />
-                  </div>
                 </div>
               ) : (
                 <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
@@ -324,29 +310,15 @@ export function CareerPage() {
             </CardContent>
           </Card>
         </div>
+
+
+          {activePlan && (
+            <AcademicPlanProgress
+              plan={activePlan}
+            />
+          )}
       </section>
     </div>
   )
 }
 
-interface StatPlaceholderProps {
-  value: string
-  label: string
-}
-
-function StatPlaceholder({
-  value,
-  label,
-}: StatPlaceholderProps) {
-  return (
-    <div className="rounded-xl border bg-background p-4">
-      <p className="text-2xl font-bold">
-        {value}
-      </p>
-
-      <p className="mt-1 text-sm text-muted-foreground">
-        {label}
-      </p>
-    </div>
-  )
-}
