@@ -205,7 +205,10 @@ export function SubjectPage() {
       )}
 
       {activeTab === "files" && (
-        <SubjectFiles />
+        <SubjectFiles
+          planId={planId}
+          courseId={courseId}
+        />
       )}
     </div>
   )
