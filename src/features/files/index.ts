@@ -3,6 +3,18 @@ export {
 } from "@/features/files/components/subject-files"
 
 export {
+  FileUpload,
+} from "@/features/files/components/file-upload"
+
+export {
+  FileList,
+} from "@/features/files/components/file-list"
+
+export {
+  FileCard,
+} from "@/features/files/components/file-card"
+
+export {
   FilePreviewDialog,
 } from "@/features/files/components/file-preview-dialog"
 
