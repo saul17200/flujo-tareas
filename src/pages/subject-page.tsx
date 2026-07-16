@@ -16,7 +16,7 @@ import {
 import { toast } from "sonner"
 
 import { SubjectExams } from "@/components/subject/subject-exams"
-import { SubjectFiles } from "@/components/subject/subject-files"
+import { SubjectFiles } from "@/features/files"
 import { SubjectHeader } from "@/components/subject/subject-header"
 import { SubjectInformation } from "@/components/subject/subject-information"
 import { SubjectNotes } from "@/components/subject/subject-notes"
