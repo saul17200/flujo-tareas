@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { FilePreviewDialog } from "@/components/subject/file-preview-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -124,6 +125,8 @@ export function SubjectFiles({
   >([])
   const [selectedFile, setSelectedFile] =
     useState<File | null>(null)
+  const [previewFile, setPreviewFile] =
+    useState<SubjectFile | null>(null)
   const [description, setDescription] =
     useState("")
   const [loading, setLoading] =
@@ -452,6 +455,9 @@ export function SubjectFiles({
                 <SubjectFileCard
                   key={subjectFile.id}
                   subjectFile={subjectFile}
+                  onPreview={() =>
+                    setPreviewFile(subjectFile)
+                  }
                   onDelete={() =>
                     void handleDelete(
                       subjectFile,
@@ -463,17 +469,28 @@ export function SubjectFiles({
           )}
         </CardContent>
       </Card>
+      <FilePreviewDialog
+        subjectFile={previewFile}
+        open={previewFile !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            setPreviewFile(null)
+          }
+        }}
+      />
     </section>
   )
 }
 
 interface SubjectFileCardProps {
   subjectFile: SubjectFile
+  onPreview: () => void
   onDelete: () => void
 }
 
 function SubjectFileCard({
   subjectFile,
+  onPreview,
   onDelete,
 }: SubjectFileCardProps) {
   const Icon = getCategoryIcon(
@@ -522,11 +539,19 @@ function SubjectFileCard({
       </p>
 
       <div className="flex flex-wrap justify-end gap-2">
+        <button
+          type="button"
+          onClick={onPreview}
+          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium transition-colors hover:bg-muted"
+        >
+          <FileText className="size-4" />
+          Vista previa
+        </button>
+
         <a
           href={subjectFile.downloadUrl}
           target="_blank"
           rel="noopener noreferrer"
-          download={subjectFile.originalName}
           className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium transition-colors hover:bg-muted"
         >
           <Download className="size-4" />
