@@ -1,3 +1,8 @@
+
+export {
+  DashboardTasksCard,
+} from "@/features/dashboard/components/cards/dashboard-tasks-card"
+
 export {
   DashboardAcademicCard,
 } from "@/features/dashboard/components/cards/dashboard-academic-card"
