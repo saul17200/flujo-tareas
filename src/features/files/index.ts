@@ -1,4 +1,8 @@
 export {
+  updateFileAndEmit,
+} from "@/features/files/utils/file-event-actions"
+
+export {
   SubjectFiles,
 } from "@/features/files/components/subject-files"
 

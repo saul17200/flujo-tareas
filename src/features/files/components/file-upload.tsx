@@ -22,6 +22,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { useAuth } from "@/features/auth/auth-provider"
+import {
+  emitFileUploadedEvent,
+} from "@/features/events"
 import { uploadSubjectFile } from "@/features/files/services/subject-files"
 import {
   formatFileSize,
@@ -102,20 +105,31 @@ export function FileUpload({
       setUploading(true)
       setUploadProgress(0)
 
-      await uploadSubjectFile(
-        user.uid,
+      const uploadedFile =
+        await uploadSubjectFile(
+          user.uid,
+          planId,
+          courseId,
+          {
+            file: selectedFile,
+            description,
+          },
+          (progress) => {
+            setUploadProgress(
+              progress.percentage,
+            )
+          },
+        )
+
+      emitFileUploadedEvent({
+        userId: user.uid,
         planId,
         courseId,
-        {
-          file: selectedFile,
-          description,
-        },
-        (progress) => {
-          setUploadProgress(
-            progress.percentage,
-          )
-        },
-      )
+        fileId: uploadedFile.id,
+        name: uploadedFile.name,
+        mimeType: uploadedFile.mimeType,
+        size: uploadedFile.size,
+      })
 
       toast.success("Archivo subido.", {
         description: selectedFile.name,

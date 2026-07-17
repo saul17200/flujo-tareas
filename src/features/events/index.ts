@@ -1,4 +1,10 @@
 export {
+  emitFileUploadedEvent,
+  emitFileUpdatedEvent,
+  emitFileDeletedEvent,
+} from "@/features/events/helpers/file-events"
+
+export {
   emitNoteCreatedEvent,
   emitNoteUpdatedEvent,
   emitNoteDeletedEvent,

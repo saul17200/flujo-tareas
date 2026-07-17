@@ -9,6 +9,9 @@ import { FilePreviewDialog } from "@/features/files/components/file-preview-dial
 import { FileUpload } from "@/features/files/components/file-upload"
 import { useAuth } from "@/features/auth/auth-provider"
 import {
+  emitFileDeletedEvent,
+} from "@/features/events"
+import {
   observeSubjectFiles,
   removeSubjectFile,
 } from "@/features/files/services/subject-files"
@@ -86,6 +89,16 @@ export function SubjectFiles({
         courseId,
         subjectFile,
       )
+
+      emitFileDeletedEvent({
+        userId: user.uid,
+        planId,
+        courseId,
+        fileId: subjectFile.id,
+        name: subjectFile.name,
+        mimeType: subjectFile.mimeType,
+        size: subjectFile.size,
+      })
 
       if (previewFile?.id === subjectFile.id) {
         setPreviewFile(null)
