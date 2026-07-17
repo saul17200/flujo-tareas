@@ -2,6 +2,7 @@ export type EventType =
   | "task-created"
   | "task-completed"
   | "task-updated"
+  | "task-deleted"
   | "note-created"
   | "note-updated"
   | "note-deleted"
