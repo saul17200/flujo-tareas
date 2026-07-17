@@ -24,12 +24,12 @@ import { SubjectStatistics } from "@/components/subject/subject-statistics"
 import { SubjectTasks } from "@/components/subject/subject-tasks"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/auth-provider"
-import { observeAcademicCourse } from "@/services/academic-courses"
-import { observeAcademicPlans } from "@/services/academic-plans"
+import { observeAcademicCourse } from "@/features/academic"
+import { observeAcademicPlans } from "@/features/academic"
 import type {
   AcademicCourse,
   AcademicPlan,
-} from "@/types/academic-plan"
+} from "@/features/academic"
 
 type SubjectTab =
   | "overview"

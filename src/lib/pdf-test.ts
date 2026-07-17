@@ -1,6 +1,6 @@
 import {
   createAcademicPlanDraft,
-} from "@/lib/curriculum-parser"
+} from "@/features/academic/parsers/curriculum-parser"
 import { extractPdfText } from "@/lib/pdf"
 
 export async function testCurriculumPdf(

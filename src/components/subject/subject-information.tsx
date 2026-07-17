@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import type { AcademicCourse } from "@/types/academic-plan"
+import type { AcademicCourse } from "@/features/academic"
 
 interface SubjectInformationProps {
   course: AcademicCourse

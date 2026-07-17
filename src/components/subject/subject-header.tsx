@@ -11,7 +11,7 @@ import type {
   AcademicCourse,
   AcademicCourseStatus,
   AcademicPlan,
-} from "@/types/academic-plan"
+} from "@/features/academic"
 
 interface SubjectHeaderProps {
   plan: AcademicPlan | null

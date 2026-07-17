@@ -11,8 +11,8 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { AcademicPlanWizard } from "@/components/academic/academic-plan-wizard"
-import { AcademicPlanProgress } from "@/components/academic/academic-plan-progress"
+import { AcademicPlanWizard } from "@/features/academic"
+import { AcademicPlanProgress } from "@/features/academic"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -26,8 +26,8 @@ import { useAuth } from "@/features/auth/auth-provider"
 import {
   observeAcademicPlans,
   removeAcademicPlan,
-} from "@/services/academic-plans"
-import type { AcademicPlan } from "@/types/academic-plan"
+} from "@/features/academic"
+import type { AcademicPlan } from "@/features/academic"
 
 const ACTIVE_PLAN_STORAGE_KEY =
   "drif-notion-active-academic-plan"
