@@ -7,28 +7,17 @@ import {
   query,
 } from "firebase/firestore"
 
-import { db } from "@/lib/firebase"
-
 import type {
-  EventType,
+  RegisterEventInput,
   UserEvent,
 } from "@/features/events/types/event"
-
-interface RegisterEventInput {
-  type: EventType
-
-  title: string
-
-  description?: string
-
-  metadata?: Record<string, unknown>
-}
+import { db } from "@/lib/firebase"
 
 export async function registerEvent(
   userId: string,
   event: RegisterEventInput,
 ) {
-  await addDoc(
+  const reference = await addDoc(
     collection(
       db,
       "users",
@@ -40,16 +29,15 @@ export async function registerEvent(
       createdAt: new Date().toISOString(),
     },
   )
+
+  return reference.id
 }
 
 export function observeEvents(
   userId: string,
-  onSuccess: (
-    events: UserEvent[],
-  ) => void,
-  onError: (
-    error: Error,
-  ) => void,
+  onSuccess: (events: UserEvent[]) => void,
+  onError: (error: Error) => void,
+  maximumResults = 50,
 ) {
   return onSnapshot(
     query(
@@ -59,25 +47,37 @@ export function observeEvents(
         userId,
         "events",
       ),
-      orderBy(
-        "createdAt",
-        "desc",
-      ),
-      limit(50),
+      orderBy("createdAt", "desc"),
+      limit(maximumResults),
     ),
-
     (snapshot) => {
-      onSuccess(
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<
-            UserEvent,
-            "id"
-          >),
-        })),
-      )
-    },
+      const events: UserEvent[] =
+        snapshot.docs.map((snapshotDocument) => {
+          const data =
+            snapshotDocument.data()
 
+          return {
+            id: snapshotDocument.id,
+            type: data.type,
+            title: String(data.title ?? ""),
+            description:
+              typeof data.description === "string"
+                ? data.description
+                : undefined,
+            createdAt: String(
+              data.createdAt ??
+                new Date().toISOString(),
+            ),
+            metadata:
+              data.metadata &&
+              typeof data.metadata === "object"
+                ? data.metadata
+                : undefined,
+          } as UserEvent
+        })
+
+      onSuccess(events)
+    },
     onError,
   )
 }
