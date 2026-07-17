@@ -7,11 +7,11 @@ import {
   updateDoc,
 } from "firebase/firestore"
 
-import { db } from "@/lib/firebase"
 import type {
   SubjectNote,
   SubjectNoteInput,
 } from "@/features/notes/types/subject-note"
+import { db } from "@/lib/firebase"
 
 function notesCollection(
   userId: string,
@@ -78,8 +78,10 @@ export function observeSubjectNotes(
             ),
           }
         })
-        .sort((a, b) =>
-          b.updatedAt.localeCompare(a.updatedAt),
+        .sort((first, second) =>
+          second.updatedAt.localeCompare(
+            first.updatedAt,
+          ),
         )
 
       onNotes(notes)
@@ -93,25 +95,24 @@ export async function createSubjectNote(
   planId: string,
   courseId: string,
   input: SubjectNoteInput,
-) {
+): Promise<string> {
   const title = input.title.trim()
   const content = input.content.trim()
 
   if (!title) {
-    throw new Error("La nota necesita un título.")
+    throw new Error(
+      "La nota necesita un título.",
+    )
   }
 
   const now = new Date().toISOString()
 
-  console.info("[Notas] Intentando crear nota", {
-    userId,
-    planId,
-    courseId,
-    title,
-  })
-
   const reference = await addDoc(
-    notesCollection(userId, planId, courseId),
+    notesCollection(
+      userId,
+      planId,
+      courseId,
+    ),
     {
       title,
       content,
@@ -120,9 +121,7 @@ export async function createSubjectNote(
     },
   )
 
-  console.info("[Notas] Nota creada", {
-    noteId: reference.id,
-  })
+  return reference.id
 }
 
 export async function updateSubjectNote(
@@ -131,12 +130,14 @@ export async function updateSubjectNote(
   courseId: string,
   noteId: string,
   input: SubjectNoteInput,
-) {
+): Promise<void> {
   const title = input.title.trim()
   const content = input.content.trim()
 
   if (!title) {
-    throw new Error("La nota necesita un título.")
+    throw new Error(
+      "La nota necesita un título.",
+    )
   }
 
   await updateDoc(
@@ -159,7 +160,7 @@ export async function removeSubjectNote(
   planId: string,
   courseId: string,
   noteId: string,
-) {
+): Promise<void> {
   await deleteDoc(
     noteDocument(
       userId,

@@ -1,4 +1,10 @@
 export {
+  emitNoteCreatedEvent,
+  emitNoteUpdatedEvent,
+  emitNoteDeletedEvent,
+} from "@/features/events/helpers/note-events"
+
+export {
   eventBus,
 } from "@/features/events/bus/event-bus"
 

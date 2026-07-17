@@ -9,6 +9,11 @@ import { NoteEditor } from "@/features/notes/components/note-editor"
 import { NoteList } from "@/features/notes/components/note-list"
 import { useAuth } from "@/features/auth/auth-provider"
 import {
+  emitNoteCreatedEvent,
+  emitNoteDeletedEvent,
+  emitNoteUpdatedEvent,
+} from "@/features/events"
+import {
   createSubjectNote,
   observeSubjectNotes,
   removeSubjectNote,
@@ -148,11 +153,19 @@ export function SubjectNotes({
           },
         )
 
+        emitNoteUpdatedEvent({
+          userId: user.uid,
+          planId,
+          courseId,
+          noteId: selectedNoteId,
+          title: cleanTitle,
+        })
+
         toast.success(
           "Nota actualizada correctamente.",
         )
       } else {
-        await createSubjectNote(
+        const noteId = await createSubjectNote(
           user.uid,
           planId,
           courseId,
@@ -161,6 +174,14 @@ export function SubjectNotes({
             content: cleanContent,
           },
         )
+
+        emitNoteCreatedEvent({
+          userId: user.uid,
+          planId,
+          courseId,
+          noteId,
+          title: cleanTitle,
+        })
 
         toast.success(
           "Nota creada correctamente.",
@@ -213,6 +234,14 @@ export function SubjectNotes({
         courseId,
         note.id,
       )
+
+      emitNoteDeletedEvent({
+        userId: user.uid,
+        planId,
+        courseId,
+        noteId: note.id,
+        title: note.title,
+      })
 
       if (selectedNoteId === note.id) {
         resetEditor()
