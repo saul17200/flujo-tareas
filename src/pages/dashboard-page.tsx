@@ -5,6 +5,8 @@ import {
   ListTodo,
   Sparkles,
 } from "lucide-react"
+import { SmartDashboardSummary } from "@/features/dashboard"
+
 import { Link } from "react-router"
 
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview"
@@ -50,6 +52,9 @@ export function DashboardPage() {
 
   return (
     <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:px-8">
+      <SmartDashboardSummary />
+      <div className="mt-8">
+
       <section>
         <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
           <Sparkles className="size-4" />
@@ -132,6 +137,7 @@ export function DashboardPage() {
           })}
         </div>
       </section>
+      </div>
     </div>
   )
 }
