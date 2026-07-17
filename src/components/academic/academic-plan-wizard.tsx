@@ -136,6 +136,16 @@ export function AcademicPlanWizard({
               "Puedes agregarlas manualmente antes de guardar.",
           },
         )
+      } else if (
+        generatedDraft.courses.length < 20
+      ) {
+        toast.warning(
+          `${generatedDraft.courses.length} materias detectadas.`,
+          {
+            description:
+              "El documento parece incompleto. Revisa el borrador antes de guardar.",
+          },
+        )
       } else {
         toast.success(
           `${generatedDraft.courses.length} materias detectadas.`,

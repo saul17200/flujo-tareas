@@ -1,6 +1,7 @@
 import type {
   PositionedPdfText,
 } from "@/lib/pdf"
+import { parseCurriculumDocument } from "@/lib/curriculum-parsers"
 import type {
   AcademicCourseDraft,
   AcademicPlanDraft,
@@ -318,7 +319,7 @@ function detectCourses(
   })
 }
 
-export function createAcademicPlanDraftFromLayout(
+function createLegacyAcademicPlanDraftFromLayout(
   text: string,
   items: PositionedPdfText[],
   file: File,
@@ -347,6 +348,25 @@ export function createAcademicPlanDraftFromLayout(
     sourceFileName: file.name,
     extractedText: text,
   }
+}
+
+
+export function createAcademicPlanDraftFromLayout(
+  text: string,
+  items: PositionedPdfText[],
+  file: File,
+): AcademicPlanDraft {
+  return parseCurriculumDocument({
+    text,
+    items,
+    file,
+    fallback: () =>
+      createLegacyAcademicPlanDraftFromLayout(
+        text,
+        items,
+        file,
+      ),
+  })
 }
 
 /**
