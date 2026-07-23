@@ -1,3 +1,7 @@
+export {
+  DashboardActivityCard,
+} from "@/features/dashboard/components/cards/dashboard-activity-card"
+
 
 export {
   DashboardTasksCard,
