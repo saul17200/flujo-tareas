@@ -33,6 +33,12 @@ import {
 } from "@/components/ui/select"
 import { useAuth } from "@/features/auth/auth-provider"
 import {
+  emitCourseFailedEvent,
+  emitCoursePassedEvent,
+  emitCourseStatusUpdatedEvent,
+  emitGradeUpdatedEvent,
+} from "@/features/events"
+import {
   observeAcademicCourses,
   updateAcademicCourse,
 } from "@/features/academic/services/academic-courses"
@@ -510,6 +516,51 @@ function AcademicCourseRow({
           grade: numericGrade,
         },
       )
+
+      const statusChanged =
+        status !== course.status
+
+      const gradeChanged =
+        numericGrade !== course.grade
+
+      if (statusChanged) {
+        const eventContext = {
+          userId: user.uid,
+          planId,
+          courseId: course.id,
+          courseName: course.name,
+          semester: course.semester,
+          previousStatus: course.status,
+          status,
+          previousGrade: course.grade,
+          grade: numericGrade,
+        }
+
+        if (
+          status === "passed" ||
+          status === "validated"
+        ) {
+          emitCoursePassedEvent(eventContext)
+        } else if (status === "failed") {
+          emitCourseFailedEvent(eventContext)
+        } else {
+          emitCourseStatusUpdatedEvent(
+            eventContext,
+          )
+        }
+      }
+
+      if (gradeChanged) {
+        emitGradeUpdatedEvent({
+          userId: user.uid,
+          planId,
+          courseId: course.id,
+          courseName: course.name,
+          semester: course.semester,
+          previousGrade: course.grade,
+          grade: numericGrade,
+        })
+      }
 
       toast.success("Materia actualizada.", {
         description: course.name,

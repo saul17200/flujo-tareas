@@ -1,4 +1,11 @@
 export {
+  emitCourseFailedEvent,
+  emitCoursePassedEvent,
+  emitCourseStatusUpdatedEvent,
+  emitGradeUpdatedEvent,
+} from "@/features/events/helpers/course-events"
+
+export {
   emitFileUploadedEvent,
   emitFileUpdatedEvent,
   emitFileDeletedEvent,
