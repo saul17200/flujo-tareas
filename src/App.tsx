@@ -5,6 +5,7 @@ import {
 } from "react-router"
 
 import { AppLayout } from "@/components/layout/app-layout"
+import { AnalyticsPage } from "@/pages/analytics-page"
 import { ProtectedRoute } from "@/features/auth/protected-route"
 import { AuthPage } from "@/pages/auth-page"
 import { CalendarPage } from "@/pages/calendar-page"
@@ -55,6 +56,11 @@ function App() {
             <Route
               path="carrera/:planId/materia/:courseId"
               element={<SubjectPage />}
+            />
+
+            <Route
+              path="analiticas"
+              element={<AnalyticsPage />}
             />
 
             <Route
