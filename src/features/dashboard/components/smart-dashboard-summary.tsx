@@ -21,6 +21,7 @@ import {
   DashboardTasksCard,
 } from "@/features/dashboard/components/cards/dashboard-tasks-card"
 import { useAcademicDashboard } from "@/features/dashboard/hooks/use-academic-dashboard"
+import { DashboardStatisticsCard } from "@/features/statistics"
 
 
 function getGreeting() {
@@ -116,6 +117,8 @@ export function SmartDashboardSummary() {
           />
 
           <DashboardActivityCard />
+
+          <DashboardStatisticsCard />
         </>
       )}
     </section>
