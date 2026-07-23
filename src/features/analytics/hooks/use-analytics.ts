@@ -1,9 +1,15 @@
 import { useMemo } from "react"
 
-import { useEvents } from "@/features/events"
+import {
+  analyticsRangeDays,
+  type AnalyticsRange,
+} from "@/features/analytics/types/analytics"
 import { calculateAnalytics } from "@/features/analytics/utils/calculate-analytics"
+import { useEvents } from "@/features/events"
 
-export function useAnalytics() {
+export function useAnalytics(
+  range: AnalyticsRange = "7-days",
+) {
   const {
     events,
     loading,
@@ -11,8 +17,12 @@ export function useAnalytics() {
   } = useEvents(500)
 
   const analytics = useMemo(
-    () => calculateAnalytics(events),
-    [events],
+    () =>
+      calculateAnalytics(
+        events,
+        analyticsRangeDays[range],
+      ),
+    [events, range],
   )
 
   return {

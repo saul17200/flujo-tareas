@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
   BarChart3,
   CheckCircle2,
@@ -20,6 +21,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ActivityWeekChart } from "@/features/analytics/components/activity-week-chart"
+import {
+  AnalyticsRangeFilter,
+} from "@/features/analytics/components/analytics-range-filter"
+import type {
+  AnalyticsRange,
+} from "@/features/analytics/types/analytics"
 import { useAnalytics } from "@/features/analytics/hooks/use-analytics"
 
 function formatHour(hour: number | null) {
@@ -34,11 +41,14 @@ function formatHour(hour: number | null) {
 }
 
 export function AnalyticsSummary() {
+  const [range, setRange] =
+    useState<AnalyticsRange>("7-days")
+
   const {
     analytics,
     loading,
     error,
-  } = useAnalytics()
+  } = useAnalytics(range)
 
   if (loading) {
     return (
@@ -68,9 +78,9 @@ export function AnalyticsSummary() {
   }
 
   const TrendIcon =
-    analytics.weeklyChangePercentage !==
+    analytics.periodChangePercentage !==
       null &&
-    analytics.weeklyChangePercentage < 0
+    analytics.periodChangePercentage < 0
       ? TrendingDown
       : TrendingUp
 
@@ -89,13 +99,20 @@ export function AnalyticsSummary() {
           Analiza tu productividad, constancia y
           progreso dentro de Drif Notion.
         </p>
+
+        <div className="mt-4">
+          <AnalyticsRangeFilter
+            value={range}
+            onChange={setRange}
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <AnalyticsMetric
           icon={Zap}
           value={String(
-            analytics.activityLastSevenDays,
+            analytics.activityCurrentPeriod,
           )}
           label="Acciones esta semana"
         />
@@ -130,7 +147,7 @@ export function AnalyticsSummary() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <CardTitle>
-                Actividad semanal
+                Actividad del periodo
               </CardTitle>
 
               <CardDescription>
@@ -139,20 +156,20 @@ export function AnalyticsSummary() {
               </CardDescription>
             </div>
 
-            {analytics.weeklyChangePercentage !==
+            {analytics.periodChangePercentage !==
               null && (
               <div className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
                 <TrendIcon className="size-4" />
 
                 <span>
-                  {analytics.weeklyChangePercentage >
+                  {analytics.periodChangePercentage >
                   0
                     ? "+"
                     : ""}
                   {
-                    analytics.weeklyChangePercentage
+                    analytics.periodChangePercentage
                   }
-                  % respecto a la semana anterior
+                  % respecto al periodo anterior
                 </span>
               </div>
             )}

@@ -86,12 +86,35 @@ function calculateCurrentStreak(
 
 function buildDailyActivity(
   events: UserEvent[],
-  days = 7,
+  days: number,
 ): DailyActivity[] {
-  const formatter =
+  const weekdayFormatter =
     new Intl.DateTimeFormat("es-MX", {
       weekday: "short",
     })
+
+  const dateFormatter =
+    new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "short",
+    })
+
+  const counts = new Map<string, number>()
+
+  for (const event of events) {
+    const eventDate = parseEventDate(event)
+
+    if (!eventDate) {
+      continue
+    }
+
+    const key = getDateKey(eventDate)
+
+    counts.set(
+      key,
+      (counts.get(key) ?? 0) + 1,
+    )
+  }
 
   const today = startOfLocalDay(new Date())
 
@@ -107,25 +130,15 @@ function buildDailyActivity(
 
       const dateKey = getDateKey(date)
 
-      const total = events.filter(
-        (event) => {
-          const eventDate =
-            parseEventDate(event)
-
-          return (
-            eventDate !== null &&
-            getDateKey(eventDate) ===
-              dateKey
-          )
-        },
-      ).length
-
       return {
         date: dateKey,
-        label: formatter
-          .format(date)
-          .replace(".", ""),
-        total,
+        label:
+          days <= 7
+            ? weekdayFormatter
+                .format(date)
+                .replace(".", "")
+            : dateFormatter.format(date),
+        total: counts.get(dateKey) ?? 0,
       }
     },
   )
@@ -170,6 +183,8 @@ function findMostActiveDay(
 
 function findMostActiveHour(
   events: UserEvent[],
+  start: Date,
+  end: Date,
 ) {
   const hourCounts = new Map<
     number,
@@ -179,7 +194,11 @@ function findMostActiveHour(
   for (const event of events) {
     const date = parseEventDate(event)
 
-    if (!date) {
+    if (
+      !date ||
+      date < start ||
+      date >= end
+    ) {
       continue
     }
 
@@ -232,14 +251,21 @@ function countByType(
 
 export function calculateAnalytics(
   events: UserEvent[],
+  periodDays = 7,
 ): AnalyticsSummary {
+  const safePeriodDays = Math.max(
+    1,
+    Math.round(periodDays),
+  )
+
   const today = startOfLocalDay(new Date())
 
   const currentPeriodStart =
     new Date(today)
 
   currentPeriodStart.setDate(
-    currentPeriodStart.getDate() - 6,
+    currentPeriodStart.getDate() -
+      (safePeriodDays - 1),
   )
 
   const currentPeriodEnd =
@@ -253,74 +279,102 @@ export function calculateAnalytics(
     new Date(currentPeriodStart)
 
   previousPeriodStart.setDate(
-    previousPeriodStart.getDate() - 7,
+    previousPeriodStart.getDate() -
+      safePeriodDays,
   )
 
-  const activityLastSevenDays =
+  const activityCurrentPeriod =
     countEventsBetween(
       events,
       currentPeriodStart,
       currentPeriodEnd,
     )
 
-  const previousSevenDays =
+  const previousPeriodActivity =
     countEventsBetween(
       events,
       previousPeriodStart,
       currentPeriodStart,
     )
 
-  const weeklyChangePercentage =
-    previousSevenDays > 0
+  const periodChangePercentage =
+    previousPeriodActivity > 0
       ? Math.round(
-          ((activityLastSevenDays -
-            previousSevenDays) /
-            previousSevenDays) *
+          ((activityCurrentPeriod -
+            previousPeriodActivity) /
+            previousPeriodActivity) *
             100,
         )
-      : activityLastSevenDays > 0
+      : activityCurrentPeriod > 0
         ? 100
         : null
 
+  const eventsInCurrentPeriod =
+    events.filter((event) => {
+      const date = parseEventDate(event)
+
+      return (
+        date !== null &&
+        date >= currentPeriodStart &&
+        date < currentPeriodEnd
+      )
+    })
+
   const dailyActivity =
-    buildDailyActivity(events)
+    buildDailyActivity(
+      eventsInCurrentPeriod,
+      safePeriodDays,
+    )
 
   return {
+    periodDays: safePeriodDays,
     totalEvents: events.length,
     currentStreak:
       calculateCurrentStreak(events),
-    activityLastSevenDays,
-    previousSevenDays,
-    weeklyChangePercentage,
+    activityCurrentPeriod,
+    previousPeriodActivity,
+    periodChangePercentage,
     averageDailyActivity:
       Number(
         (
-          activityLastSevenDays / 7
+          activityCurrentPeriod /
+          safePeriodDays
         ).toFixed(1),
       ),
     mostActiveDay:
       findMostActiveDay(dailyActivity),
     mostActiveHour:
-      findMostActiveHour(events),
-    completedTasks: events.filter(
-      (event) =>
-        event.type ===
-        "task-completed",
-    ).length,
-    createdNotes: events.filter(
-      (event) =>
-        event.type === "note-created",
-    ).length,
-    uploadedFiles: events.filter(
-      (event) =>
-        event.type === "file-uploaded",
-    ).length,
-    passedCourses: events.filter(
-      (event) =>
-        event.type === "course-passed",
-    ).length,
+      findMostActiveHour(
+        events,
+        currentPeriodStart,
+        currentPeriodEnd,
+      ),
+    completedTasks:
+      eventsInCurrentPeriod.filter(
+        (event) =>
+          event.type ===
+          "task-completed",
+      ).length,
+    createdNotes:
+      eventsInCurrentPeriod.filter(
+        (event) =>
+          event.type ===
+          "note-created",
+      ).length,
+    uploadedFiles:
+      eventsInCurrentPeriod.filter(
+        (event) =>
+          event.type ===
+          "file-uploaded",
+      ).length,
+    passedCourses:
+      eventsInCurrentPeriod.filter(
+        (event) =>
+          event.type ===
+          "course-passed",
+      ).length,
     dailyActivity,
     eventsByType:
-      countByType(events),
+      countByType(eventsInCurrentPeriod),
   }
 }
