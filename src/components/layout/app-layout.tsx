@@ -23,6 +23,7 @@ import { toast } from "sonner"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/auth-provider"
+import { NotificationCenter } from "@/features/notifications"
 
 interface NavigationItem {
   label: string
@@ -242,6 +243,7 @@ export function AppLayout() {
                 {user?.email}
               </span>
 
+              <NotificationCenter />
               <ModeToggle />
             </div>
           </div>
