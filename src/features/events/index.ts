@@ -1,4 +1,9 @@
 export {
+  emitAchievementUnlockedEvent,
+  emitLevelUpEvent,
+} from "@/features/events/helpers/achievement-events"
+
+export {
   emitCourseFailedEvent,
   emitCoursePassedEvent,
   emitCourseStatusUpdatedEvent,

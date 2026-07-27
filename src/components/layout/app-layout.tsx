@@ -8,6 +8,7 @@ import {
   Home,
   ListTodo,
   School,
+  Trophy,
   LogOut,
   Menu,
   UserRound,
@@ -24,6 +25,7 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/auth-provider"
 import { NotificationCenter } from "@/features/notifications"
+import { RewardListener } from "@/features/rewards"
 
 interface NavigationItem {
   label: string
@@ -63,6 +65,11 @@ const navigationItems: NavigationItem[] = [
     label: "Analíticas",
     path: "/analiticas",
     icon: ChartNoAxesCombined,
+  },
+  {
+    label: "Logros",
+    path: "/logros",
+    icon: Trophy,
   },
   {
     label: "Estadísticas",
@@ -156,6 +163,7 @@ export function AppLayout() {
 
   return (
     <div className="min-h-screen bg-muted/30 text-foreground">
+      <RewardListener />
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r bg-background lg:flex lg:flex-col">
         <div className="flex h-20 items-center gap-3 border-b px-5">
           <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">

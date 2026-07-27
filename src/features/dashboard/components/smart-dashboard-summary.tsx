@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useAuth } from "@/features/auth/auth-provider"
+import { DashboardAchievementCard } from "@/features/achievements"
 import {
   DashboardAcademicCard,
 } from "@/features/dashboard/components/cards/dashboard-academic-card"
@@ -115,6 +116,8 @@ export function SmartDashboardSummary() {
           <DashboardTasksCard
             task={nextTask}
           />
+
+          <DashboardAchievementCard />
 
           <DashboardActivityCard />
 

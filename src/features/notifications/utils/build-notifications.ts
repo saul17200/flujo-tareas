@@ -71,6 +71,13 @@ function getEventDestination(
   }
 
   if (
+    event.type === "achievement-unlocked" ||
+    event.type === "level-up"
+  ) {
+    return "/logros"
+  }
+
+  if (
     event.type.startsWith("task-")
   ) {
     return "/tareas"
