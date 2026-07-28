@@ -13,6 +13,7 @@ import { AuthPage } from "@/pages/auth-page"
 import { CalendarPage } from "@/pages/calendar-page"
 import { CareerPage } from "@/pages/career-page"
 import { DashboardPage } from "@/pages/dashboard-page"
+import { CopilotPage } from "@/pages/copilot-page"
 import { ProfilePage } from "@/pages/profile-page"
 import { SchedulePage } from "@/pages/schedule-page"
 import { StatisticsPage } from "@/pages/statistics-page"
@@ -33,6 +34,11 @@ function App() {
             <Route
               index
               element={<DashboardPage />}
+            />
+
+            <Route
+              path="copiloto"
+              element={<CopilotPage />}
             />
 
             <Route

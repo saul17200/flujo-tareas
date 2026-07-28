@@ -15,6 +15,7 @@ import { DashboardAchievementCard } from "@/features/achievements"
 import { DailyMissionsPanel } from "@/features/missions"
 import { SmartStreakCard } from "@/features/streaks"
 import { LeagueCard } from "@/features/leagues"
+import { CopilotCard } from "@/features/copilot"
 import {
   DashboardAcademicCard,
 } from "@/features/dashboard/components/cards/dashboard-academic-card"
@@ -104,6 +105,8 @@ export function SmartDashboardSummary() {
         </Card>
       ) : (
         <>
+          <CopilotCard />
+
           <DashboardAcademicCard
             career={activePlan.career}
             institution={activePlan.institution}

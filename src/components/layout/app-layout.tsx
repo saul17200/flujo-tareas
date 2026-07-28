@@ -1,6 +1,7 @@
 import { useState } from "react"
 import {
   BarChart3,
+  Bot,
   CalendarDays,
   ChartNoAxesCombined,
   GraduationCap,
@@ -43,6 +44,11 @@ const navigationItems: NavigationItem[] = [
     path: "/",
     icon: Home,
     end: true,
+  },
+  {
+    label: "Copiloto",
+    path: "/copiloto",
+    icon: Bot,
   },
   {
     label: "Mis tareas",
