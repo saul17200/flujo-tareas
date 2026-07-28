@@ -2,6 +2,9 @@ import { useMemo } from "react"
 
 import { useAnalytics } from "@/features/analytics"
 import { calculateAchievementProfile } from "@/features/achievements/utils/calculate-achievements"
+import {
+  calculateStreakProfile,
+} from "@/features/streaks/utils/calculate-streak"
 
 function getEventXp(
   metadata: Record<string, unknown> | undefined,
@@ -60,6 +63,15 @@ export function useAchievements() {
     )
   }, [events])
 
+  const smartStreak = useMemo(
+    () =>
+      calculateStreakProfile(
+        events,
+        3,
+      ),
+    [events],
+  )
+
   const profile = useMemo(
     () =>
       calculateAchievementProfile(
@@ -73,7 +85,7 @@ export function useAchievements() {
           passedCourses:
             analytics.passedCourses,
           currentStreak:
-            analytics.currentStreak,
+            smartStreak.currentStreak,
           totalEvents:
             analytics.totalEvents,
         },
@@ -82,6 +94,7 @@ export function useAchievements() {
     [
       analytics,
       missionXp,
+      smartStreak.currentStreak,
     ],
   )
 

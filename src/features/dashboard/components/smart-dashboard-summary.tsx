@@ -14,6 +14,7 @@ import { useAuth } from "@/features/auth/auth-provider"
 import { DashboardAchievementCard } from "@/features/achievements"
 import { DailyMissionsPanel } from "@/features/missions"
 import { SmartStreakCard } from "@/features/streaks"
+import { LeagueCard } from "@/features/leagues"
 import {
   DashboardAcademicCard,
 } from "@/features/dashboard/components/cards/dashboard-academic-card"
@@ -124,6 +125,8 @@ export function SmartDashboardSummary() {
           <DailyMissionsPanel />
 
           <SmartStreakCard />
+
+          <LeagueCard />
 
           <DashboardActivityCard />
 

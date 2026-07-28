@@ -11,6 +11,7 @@ import {
   Trophy,
   LogOut,
   Menu,
+  Medal,
   UserRound,
   X,
 } from "lucide-react"
@@ -71,6 +72,11 @@ const navigationItems: NavigationItem[] = [
     label: "Logros",
     path: "/logros",
     icon: Trophy,
+  },
+  {
+    label: "Ligas",
+    path: "/ligas",
+    icon: Medal,
   },
   {
     label: "Estadísticas",

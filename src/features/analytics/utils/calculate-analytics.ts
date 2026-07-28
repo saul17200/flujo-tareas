@@ -1,6 +1,9 @@
 import type {
   UserEvent,
 } from "@/features/events"
+import {
+  calculateStreakProfile,
+} from "@/features/streaks/utils/calculate-streak"
 import type {
   AnalyticsSummary,
   DailyActivity,
@@ -33,55 +36,6 @@ function parseEventDate(event: UserEvent) {
   return Number.isNaN(date.getTime())
     ? null
     : date
-}
-
-function calculateCurrentStreak(
-  events: UserEvent[],
-) {
-  const activeDays = new Set<string>()
-
-  for (const event of events) {
-    const date = parseEventDate(event)
-
-    if (date) {
-      activeDays.add(getDateKey(date))
-    }
-  }
-
-  if (activeDays.size === 0) {
-    return 0
-  }
-
-  const today = startOfLocalDay(new Date())
-  const yesterday = new Date(today)
-
-  yesterday.setDate(
-    yesterday.getDate() - 1,
-  )
-
-  let cursor: Date | null =
-    activeDays.has(getDateKey(today))
-      ? today
-      : activeDays.has(getDateKey(yesterday))
-        ? yesterday
-        : null
-
-  if (!cursor) {
-    return 0
-  }
-
-  let streak = 0
-
-  while (
-    activeDays.has(getDateKey(cursor))
-  ) {
-    streak += 1
-
-    cursor = new Date(cursor)
-    cursor.setDate(cursor.getDate() - 1)
-  }
-
-  return streak
 }
 
 function buildDailyActivity(
@@ -320,6 +274,12 @@ export function calculateAnalytics(
       )
     })
 
+  const smartStreak =
+    calculateStreakProfile(
+      events,
+      3,
+    )
+
   const dailyActivity =
     buildDailyActivity(
       eventsInCurrentPeriod,
@@ -330,7 +290,7 @@ export function calculateAnalytics(
     periodDays: safePeriodDays,
     totalEvents: events.length,
     currentStreak:
-      calculateCurrentStreak(events),
+      smartStreak.currentStreak,
     activityCurrentPeriod,
     previousPeriodActivity,
     periodChangePercentage,

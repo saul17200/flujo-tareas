@@ -7,6 +7,7 @@ import {
 import { AppLayout } from "@/components/layout/app-layout"
 import { AnalyticsPage } from "@/pages/analytics-page"
 import { AchievementsPage } from "@/pages/achievements-page"
+import { LeaguesPage } from "@/pages/leagues-page"
 import { ProtectedRoute } from "@/features/auth/protected-route"
 import { AuthPage } from "@/pages/auth-page"
 import { CalendarPage } from "@/pages/calendar-page"
@@ -68,6 +69,12 @@ function App() {
               path="logros"
               element={<AchievementsPage />}
             />
+
+            <Route
+              path="ligas"
+              element={<LeaguesPage />}
+            />
+
 
             <Route
               path="estadisticas"
