@@ -28,7 +28,7 @@ function getXpRequiredForLevel(
 
 function calculateLevel(totalXp: number) {
   let level = 1
-  let remainingXp = totalXp
+  let remainingXp = Math.max(0, totalXp)
 
   while (
     remainingXp >=
@@ -58,6 +58,7 @@ function calculateLevel(totalXp: number) {
 
 export function calculateAchievementProfile(
   metrics: AchievementMetrics,
+  bonusXp = 0,
 ): AchievementProfile {
   const achievements =
     achievementDefinitions.map(
@@ -86,7 +87,7 @@ export function calculateAchievementProfile(
       },
     )
 
-  const totalXp = achievements
+  const achievementXp = achievements
     .filter(
       (achievement) =>
         achievement.unlocked,
@@ -97,11 +98,21 @@ export function calculateAchievementProfile(
       0,
     )
 
+  const safeBonusXp = Math.max(
+    0,
+    Math.round(bonusXp),
+  )
+
+  const totalXp =
+    achievementXp + safeBonusXp
+
   const levelData =
     calculateLevel(totalXp)
 
   return {
     totalXp,
+    achievementXp,
+    bonusXp: safeBonusXp,
     ...levelData,
     unlockedCount:
       achievements.filter(

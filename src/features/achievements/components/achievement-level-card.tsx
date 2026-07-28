@@ -72,7 +72,29 @@ export function AchievementLevelCard({
           </div>
         </div>
 
-        <div className="grid gap-2">
+        <div className="grid gap-3">
+          <div className="grid gap-2 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2">
+            <div>
+              <p className="text-xs text-muted-foreground">
+                XP por logros
+              </p>
+
+              <p className="mt-1 font-bold">
+                {profile.achievementXp} XP
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs text-muted-foreground">
+                XP por misiones
+              </p>
+
+              <p className="mt-1 font-bold">
+                {profile.bonusXp} XP
+              </p>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">
               Progreso al nivel {profile.level + 1}

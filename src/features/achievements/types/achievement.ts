@@ -41,6 +41,8 @@ export interface AchievementProgress
 
 export interface AchievementProfile {
   totalXp: number
+  achievementXp: number
+  bonusXp: number
   level: number
   currentLevelXp: number
   nextLevelXp: number
