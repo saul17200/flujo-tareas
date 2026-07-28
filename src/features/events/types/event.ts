@@ -18,6 +18,7 @@ export type EventType =
   | "study-session-completed"
   | "achievement-unlocked"
   | "level-up"
+  | "daily-mission-completed"
 
 export interface UserEvent {
   id: string

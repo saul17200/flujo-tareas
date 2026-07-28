@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card"
 import { useAuth } from "@/features/auth/auth-provider"
 import { DashboardAchievementCard } from "@/features/achievements"
+import { DailyMissionsPanel } from "@/features/missions"
 import {
   DashboardAcademicCard,
 } from "@/features/dashboard/components/cards/dashboard-academic-card"
@@ -118,6 +119,8 @@ export function SmartDashboardSummary() {
           />
 
           <DashboardAchievementCard />
+
+          <DailyMissionsPanel />
 
           <DashboardActivityCard />
 

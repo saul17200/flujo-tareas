@@ -1,4 +1,8 @@
 export {
+  emitDailyMissionCompletedEvent,
+} from "@/features/events/helpers/mission-events"
+
+export {
   emitAchievementUnlockedEvent,
   emitLevelUpEvent,
 } from "@/features/events/helpers/achievement-events"

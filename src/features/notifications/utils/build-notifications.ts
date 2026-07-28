@@ -78,6 +78,12 @@ function getEventDestination(
   }
 
   if (
+    event.type === "daily-mission-completed"
+  ) {
+    return "/"
+  }
+
+  if (
     event.type.startsWith("task-")
   ) {
     return "/tareas"
