@@ -1,4 +1,8 @@
 export {
+  emitLeaguePromotedEvent,
+} from "@/features/events/helpers/league-events"
+
+export {
   emitDailyMissionCompletedEvent,
 } from "@/features/events/helpers/mission-events"
 

@@ -84,6 +84,12 @@ function getEventDestination(
   }
 
   if (
+    event.type === "league-promoted"
+  ) {
+    return "/ligas"
+  }
+
+  if (
     event.type.startsWith("task-")
   ) {
     return "/tareas"

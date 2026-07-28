@@ -17,6 +17,7 @@ export {
 
 export type {
   AchievementReward,
+  LeagueReward,
   LevelReward,
   Reward,
 } from "@/features/rewards/types/reward"

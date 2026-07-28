@@ -19,6 +19,7 @@ export type EventType =
   | "achievement-unlocked"
   | "level-up"
   | "daily-mission-completed"
+  | "league-promoted"
 
 export interface UserEvent {
   id: string

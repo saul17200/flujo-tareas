@@ -1,5 +1,6 @@
 import {
   ArrowUp,
+  Medal,
   Sparkles,
   Star,
   Trophy,
@@ -22,6 +23,9 @@ export function RewardCelebration({
 }: RewardCelebrationProps) {
   const levelUp =
     reward.kind === "level-up"
+
+  const leaguePromoted =
+    reward.kind === "league-promoted"
 
   return (
     <div
@@ -54,7 +58,9 @@ export function RewardCelebration({
 
         <div className="relative">
           <div className="mx-auto flex size-24 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
-            {levelUp ? (
+            {leaguePromoted ? (
+              <Medal className="size-12" />
+            ) : levelUp ? (
               <ArrowUp className="size-12" />
             ) : (
               <Trophy className="size-12" />
@@ -62,13 +68,14 @@ export function RewardCelebration({
           </div>
 
           <p className="mt-6 text-sm font-bold uppercase tracking-[0.2em] text-primary">
-            {levelUp
-              ? "¡Subiste de nivel!"
-              : "Logro desbloqueado"}
+            {leaguePromoted
+              ? "¡Ascenso de liga!"
+              : levelUp
+                ? "¡Subiste de nivel!"
+                : "Logro desbloqueado"}
           </p>
 
-          {reward.kind ===
-          "achievement" ? (
+          {reward.kind === "achievement" ? (
             <>
               <h2 className="mt-3 text-3xl font-bold">
                 {reward.title}
@@ -82,6 +89,18 @@ export function RewardCelebration({
                 <Star className="size-5" />
                 +{reward.xp} XP
               </div>
+            </>
+          ) : reward.kind ===
+            "league-promoted" ? (
+            <>
+              <h2 className="mt-3 text-4xl font-bold">
+                Liga {reward.leagueName}
+              </h2>
+
+              <p className="mt-3 text-muted-foreground">
+                Alcanzaste {reward.weeklyXp} XP
+                esta semana. ¡Sigue avanzando!
+              </p>
             </>
           ) : (
             <>
