@@ -20,6 +20,9 @@ import {
   CopilotCard,
 } from "@/features/copilot/components/copilot-card"
 import {
+  WeeklyCopilotCard,
+} from "@/features/copilot/components/weekly-copilot-card"
+import {
   useCopilot,
 } from "@/features/copilot/hooks/use-copilot"
 import {
@@ -114,6 +117,8 @@ export function CopilotOverview() {
       </div>
 
       <CopilotCard />
+
+      <WeeklyCopilotCard />
 
       <Card>
         <CardHeader>

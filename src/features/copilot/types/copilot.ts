@@ -27,3 +27,22 @@ export interface CopilotSummary {
   recommendations: CopilotRecommendation[]
   urgentCount: number
 }
+
+export type WeeklyTrend =
+  | "up"
+  | "down"
+  | "stable"
+
+export interface CopilotWeeklySummary {
+  currentWeekActivity: number
+  previousWeekActivity: number
+  changePercentage: number | null
+  trend: WeeklyTrend
+  completedTasks: number
+  earnedXp: number
+  completedGoalDays: number
+  mostActiveDay: string | null
+  highlight: string
+  risk: string | null
+  recommendation: string
+}
